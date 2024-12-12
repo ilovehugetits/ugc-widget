@@ -258,7 +258,7 @@ export function CreateForm({ onBackClick }: Props) {
                     <div className="gap-2 top-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 mb-2">
                         <div className="font-medium text-[16px] text-[#565656] col-span-2">Categories:</div>
                         <div className="col-span-2 mb-2 lg:col-span-3 md:col-span-2 sm:col-span-3 flex gap-2 items-center flex-wrap">
-                            {actorCategories.map((category) => (
+                            {actorCategories.filter(category => category !== 'All').map((category) => (
                                 <div
                                     key={category}
                                     onClick={() => {
