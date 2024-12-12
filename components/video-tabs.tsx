@@ -28,7 +28,7 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
           <TabsTrigger value="create">Create Video</TabsTrigger>
         </TabsList>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 relative">
           <TooltipProvider delayDuration={0}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -36,7 +36,17 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
                   {videosLeft} videos left
                 </div>
               </TooltipTrigger>
-              <TooltipContent className="p-4 px-5 text-sm max-w-64 flex flex-col">
+              <TooltipContent 
+                side="bottom" 
+                align="center"
+                sideOffset={5}
+                className="p-4 px-5 text-sm w-[250px] flex flex-col"
+                style={{ 
+                  maxWidth: 'calc(100vw - 40px)',
+                  transform: 'translateX(-40%)',
+                  left: '50%'
+                }}
+              >
                 <p>Need more? Click below to purchase additional credits.</p>
                 <a href="https://clients.bandsoffads.com/portal/subscriptions" target="_blank" className="font-semibold mt-2 text-[#0069d9]">Buy More Credits</a>
               </TooltipContent>

@@ -55,8 +55,6 @@ export function CreateForm({ onBackClick }: Props) {
     const [activeActor, setActiveActor] = useState<string | null>(null)
     const [selectedActor, setSelectedActor] = useState<string | null>(null)
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-    const [showAllTags, setShowAllTags] = useState(false)
-    const [isGeneratingScript, setIsGeneratingScript] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -74,9 +72,7 @@ export function CreateForm({ onBackClick }: Props) {
         queryFn: getActors
     })
 
-    // Get unique categories from actors with emojis
     const actorCategories = [...new Set(actors.flatMap(actor => {
-        // Eğer categories bir string ise, JSON parse et
         if (typeof actor.categories === 'string') {
             try {
                 return JSON.parse(actor.categories)
@@ -84,7 +80,7 @@ export function CreateForm({ onBackClick }: Props) {
                 return []
             }
         }
-        // Eğer zaten array ise direkt kullan
+
         return actor.categories || []
     }))]
         .filter(category =>
@@ -114,10 +110,20 @@ export function CreateForm({ onBackClick }: Props) {
     // Create video mutation
     const createMutation = useMutation({
         mutationFn: async (data: typeof formData & { actorId: string }) => {
+            const searchParams = new URLSearchParams(window.location.search)
+            const userId = searchParams.get('user_id')
+            const hash = searchParams.get('hash')
+
+            if (!userId || !hash) {
+                throw new Error('Missing authentication parameters')
+            }
+
             return createVideo({
                 name: data.name,
                 script: data.script,
-                actorId: data.actorId
+                actorId: data.actorId,
+                userId,
+                hash
             })
         },
         onSuccess: () => {
@@ -216,13 +222,13 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                             <Textarea
                                 value={formData.script}
-                                onChange={(e) => setFormData(prev => ({ ...prev, script: e.target.value.slice(0, 500) }))}
+                                onChange={(e) => setFormData(prev => ({ ...prev, script: e.target.value.slice(0, 1000) }))}
                                 placeholder="Type your script here..."
                                 className="min-h-[200px] font-medium text-[#64748B] placeholder:text-[#64748B] placeholder:opacity-80"
                             />
                             <div className="flex items-center justify-end mt-1">
                                 <div className="text-[13px] font-medium text-[#9C9C9C]">
-                                    <span className="text-[#565656]">{formData.script.length}</span>/500
+                                    <span className="text-[#565656]">{formData.script.length}</span>/1000
                                 </div>
                             </div>
                         </div>
@@ -232,7 +238,7 @@ export function CreateForm({ onBackClick }: Props) {
                         <Button
                             onClick={handleSubmit}
                             disabled={createMutation.isPending}
-                            className="w-[120px] bg-[#046AD4] hover:bg-[#0069d9] rounded-[8px] font-normal"
+                            className="w-[120px] bg-[#046AD4] h-14 hover:bg-[#0069d9] rounded-[8px] font-normal"
                             size="big"
                         >
                             {createMutation.isPending ? "Creating..." : "Create"}
@@ -240,7 +246,7 @@ export function CreateForm({ onBackClick }: Props) {
                         <Button
                             onClick={onBackClick}
                             variant="outline"
-                            className="w-[120px] rounded-[8px] font-normal border-gray-600 hover:bg-gray-600 hover:text-white text-gray-600"
+                            className="w-[120px] h-14 rounded-[8px] font-normal border-gray-600 hover:bg-gray-600 hover:text-white text-gray-600"
                             size="big"
                         >
                             Back

@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS "actors" (
 	"status" varchar(20) DEFAULT 'draft' NOT NULL,
 	"display_order" integer DEFAULT 0 NOT NULL,
 	"lipdub_actor_id" integer,
-	"metadata" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );

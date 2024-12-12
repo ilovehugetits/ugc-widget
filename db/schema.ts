@@ -46,13 +46,6 @@ export const actors = pgTable('actors', {
     status: varchar('status', { length: 20 }).notNull().default('draft'),
     displayOrder: integer('display_order').notNull().default(0),
     lipDubActorId: integer('lipdub_actor_id'), // For PRO quality videos
-    metadata: jsonb('metadata').$type<{
-        voice_settings?: {
-            stability?: number;
-            similarity_boost?: number;
-            style?: number;
-        };
-    }>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull()
 })
@@ -66,7 +59,7 @@ export const videos = pgTable('videos', {
     cdnUrl: text('cdn_url'), // CDN URL after upload to DigitalOcean Spaces
     thumbnailUrl: text('thumbnail_url'),
     script: text('script').notNull(), // Video script content
-    actorId: uuid('actor_id').notNull().references(() => actors.id),
+    actorId: uuid('actor_id').notNull(),
     userId: uuid('user_id').notNull().references(() => users.id),
     processingService: varchar('processing_service', { length: 50 }), // 'synclabs' or 'lipdub'
     processingMetadata: jsonb('processing_metadata').$type<{
