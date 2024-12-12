@@ -129,7 +129,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
     return (
         <>
             <div className="gap-3 w-full grid lg:grid-cols-5 md:grid-cols-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
-                {filteredVideos.map(video => (
+                {filteredVideos.reverse().map(video => (
                     <div key={video.id} className="group overflow-hidden rounded-xl relative">
                         <div className="aspect-[9/16] relative">
                             {activeVideo === video.id ? (
