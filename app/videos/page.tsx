@@ -2,7 +2,7 @@ import { VideoTabs } from "@/components/video-tabs"
 import { getAuthParams, createUserIfNotExists } from "@/lib/auth"
 import { db } from "@/db"
 import { users, videos } from "@/db/schema"
-import { eq, and, not } from "drizzle-orm"
+import { eq, and, not, desc } from "drizzle-orm"
 import { Video } from "@/components/video-grid"
 
 type Props = {
@@ -21,7 +21,7 @@ async function getVideos(userId: string) {
           not(eq(videos.status, 'deleted'))
         )
       )
-      .orderBy(videos.createdAt)
+      .orderBy(desc(videos.createdAt))
     
     return userVideos as Video[]
   } catch (error) {

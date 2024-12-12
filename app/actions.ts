@@ -86,7 +86,7 @@ export async function createVideo(data: {
             name: data.name,
             actorId: data.actorId,
             userId: data.userId,
-            scriptLength: data.script.length
+            scriptLength: data.script
         })
 
         const headersList = await headers()
