@@ -10,16 +10,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
           
-      # - name: Install dependencies
-      #   run: npm ci
+      - name: Install dependencies
+        run: npm ci
         
-      # - name: Build
-      #   run: npm run build
+      - name: Build
+        run: npm run build
         
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
@@ -30,5 +30,6 @@ jobs:
           script: |
             cd /var/www/beta.sleekdevs.com
             git pull origin master
+            npm ci
             npm run build
             pm2 restart sleekdevs-beta || pm2 start npm --name "sleekdevs-beta" -- start
