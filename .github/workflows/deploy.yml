@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [ main ]  # veya default branch'iniz
+    branches: [ master ]  # veya default branch'iniz
 
 jobs:
   deploy:
