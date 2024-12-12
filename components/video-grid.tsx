@@ -48,12 +48,11 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
         return Array.isArray(data) && data.every(item =>
             typeof item === 'object' &&
             item !== null &&
-            'jobId' in item &&
             'status' in item
         )
     }
 
-    const filteredVideos = isValidVideos(videos) ? videos.filter(video => video.status !== 'deleted') : []
+    const filteredVideos = isValidVideos(videos) ? videos.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) : []
 
     const deleteMutation = useMutation({
         mutationFn: async (videoId: string) => {
