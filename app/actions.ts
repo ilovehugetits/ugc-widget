@@ -11,7 +11,7 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 })
 
-export async function deleteVideo(jobId: string) {
+export async function deleteVideo(videoId: string) {
     try {
         const headersList = await headers()
         const userId = headersList.get('x-user-external-id')
@@ -33,7 +33,7 @@ export async function deleteVideo(jobId: string) {
 
         const video = await db.query.videos.findFirst({
             where: and(
-                eq(videos.jobId, jobId),
+                eq(videos.id, videoId),
                 eq(videos.userId, user.id)
             )
         })
@@ -46,7 +46,7 @@ export async function deleteVideo(jobId: string) {
             .set({ status: 'deleted' })
             .where(
                 and(
-                    eq(videos.jobId, jobId),
+                    eq(videos.id, videoId),
                     eq(videos.userId, user.id)
                 )
             )

@@ -19,12 +19,12 @@ import axios from 'axios'
 
 export interface Video {
     id: string
-    name: string
-    jobId: string
-    status: 'queued' | 'processing' | 'completed' | 'failed' | 'deleted'
     cdnUrl: string
     thumbnailUrl: string
+    name: string
     createdAt: Date
+    status: 'queued' | 'processing' | 'completed' | 'failed' | 'deleted'
+    actorId: string
 }
 
 interface Props {
@@ -56,8 +56,8 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
     const filteredVideos = isValidVideos(videos) ? videos.filter(video => video.status !== 'deleted') : []
 
     const deleteMutation = useMutation({
-        mutationFn: async (jobId: string) => {
-            const result = await deleteVideo(jobId)
+        mutationFn: async (videoId: string) => {
+            const result = await deleteVideo(videoId)
             if (!result.success) {
                 throw new Error(result.error || 'Failed to delete video')
             }
@@ -131,9 +131,9 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
         <>
             <div className="gap-3 w-full grid lg:grid-cols-5 md:grid-cols-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
                 {filteredVideos.map(video => (
-                    <div key={video.jobId} className="group overflow-hidden rounded-xl relative">
+                    <div key={video.id} className="group overflow-hidden rounded-xl relative">
                         <div className="aspect-[9/16] relative">
-                            {activeVideo === video.jobId ? (
+                            {activeVideo === video.id ? (
                                 <video
                                     className="aspect-[4/6] w-full h-full rounded-xl"
                                     src={video.cdnUrl.includes("https://") ? video.cdnUrl : "https://" + video.cdnUrl}
@@ -149,7 +149,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                     />
                                     <div
                                         className="absolute inset-0 bg-black rounded-xl bg-opacity-50 flex items-center justify-center cursor-pointer"
-                                        onClick={() => handleThumbnailClick(video.jobId, video.status)}
+                                        onClick={() => handleThumbnailClick(video.id, video.status)}
                                     >
                                         {video.status === 'completed' ? (
                                             <FaPlay className="text-white text-4xl" />
@@ -181,14 +181,14 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                             <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all absolute top-0 right-0 m-2 flex">
                                 {video.status === 'completed' && (
                                     <div
-                                        onClick={() => handleDownloadClick(video.cdnUrl, video.jobId)}
+                                        onClick={() => handleDownloadClick(video.cdnUrl, video.id)}
                                         className="cursor-pointer bg-white text-white text-opacity-70 hover:text-opacity-100 transition-all bg-opacity-15 rounded-lg w-8 h-8 flex items-center justify-center mr-2"
                                     >
                                         <FaDownload className="text-sm" />
                                     </div>
                                 )}
                                 <div
-                                    onClick={() => setVideoToDelete(video.jobId)}
+                                    onClick={() => setVideoToDelete(video.id)}
                                     className="cursor-pointer bg-white text-white text-opacity-70 hover:text-opacity-100 transition-all bg-opacity-15 rounded-lg w-8 h-8 flex items-center justify-center"
                                 >
                                     <FaTrash className="text-sm" />
