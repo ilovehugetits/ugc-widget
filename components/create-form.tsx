@@ -131,7 +131,7 @@ export function CreateForm({ onBackClick }: Props) {
             const videosButton = document.querySelector('[value="videos"]') as HTMLButtonElement
             videosButton?.click()
             toast({
-                title: "Video creation started",
+                title: "Video creation started.",
                 description: "Your video will be ready in 3-7 minutes."
             })
         },
