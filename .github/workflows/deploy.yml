@@ -2,7 +2,7 @@ name: Deploy to Production
 
 on:
   push:
-    branches: [ main ]  # veya default branch'iniz
+    branches: [ master ]  # veya default branch'iniz
 
 jobs:
   deploy:
@@ -29,7 +29,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /var/www/beta.sleekdevs.com
-            git pull origin main
+            git pull origin master
             npm ci
             npm run build
             pm2 restart sleekdevs-beta || pm2 start npm --name "sleekdevs-beta" -- start
