@@ -221,13 +221,13 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                             <Textarea
                                 value={formData.script}
-                                onChange={(e) => setFormData(prev => ({ ...prev, script: e.target.value.slice(0, 1000) }))}
+                                onChange={(e) => setFormData(prev => ({ ...prev, script: e.target.value.slice(0, 600) }))}
                                 placeholder="Type your script here..."
                                 className="min-h-[200px] font-medium text-[#64748B] placeholder:text-[#64748B] placeholder:opacity-80"
                             />
                             <div className="flex items-center justify-end mt-1">
                                 <div className="text-[13px] font-medium text-[#9C9C9C]">
-                                    <span className="text-[#565656]">{formData.script.length}</span>/1000
+                                    <span className="text-[#565656]">{formData.script.length}</span>/600
                                 </div>
                             </div>
                         </div>
