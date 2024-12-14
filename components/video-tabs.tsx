@@ -21,7 +21,7 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
   const [activeTab, setActiveTab] = useState("videos")
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-[87vh] flex flex-col">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 h-[87vh] flex flex-col">
       <div className="flex flex-col-reverse md:flex-row gap-y-4 items-center justify-between mb-0">
         <TabsList>
           <TabsTrigger value="videos">All Videos</TabsTrigger>
@@ -62,7 +62,7 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
         />
       </TabsContent>
 
-      <TabsContent value="create" className="bg-white rounded-[6px]">
+      <TabsContent value="create" className="bg-white rounded-[6px] flex-1">
         <CreateForm 
           onBackClick={() => setActiveTab("videos")}
         />
