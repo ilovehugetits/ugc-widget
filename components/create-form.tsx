@@ -259,7 +259,7 @@ export function CreateForm({ onBackClick }: Props) {
                     </div>
                 </div>
 
-                <div className="flex flex-col w-full md:border-l-[1.5px] p-6 py-5 w-full flex-1 h-[86.1vh] col-span-6 relative">
+                <div className="flex flex-col w-full md:border-l-[1.5px] px-6 pt-5 pb-0 w-full flex-1 h-[86.1vh] col-span-6 relative">
                     <div className="gap-2 top-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 mb-2">
                         <div className="font-medium text-[16px] text-[#565656] col-span-2">Categories:</div>
                         <div className="col-span-2 mb-2 lg:col-span-3 md:col-span-2 sm:col-span-3 flex gap-2 items-center flex-wrap">
@@ -285,8 +285,8 @@ export function CreateForm({ onBackClick }: Props) {
                         </div>
                     </div>
 
-                    <div className="scrollBar overflow-y-auto flex-1">
-                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="scrollBar overflow-y-auto flex-1 rounded-t-[8px]">
+                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 pb-4">
                             {filteredActors.map(actor => (
                                 <div
                                     key={actor.id}
