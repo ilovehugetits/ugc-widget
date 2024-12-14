@@ -8,6 +8,7 @@ body {
   background-color: transparent !important;
   height: fit-content;
   height: 100%;
+  pointer-events: all !important;
 }
 
 html {
