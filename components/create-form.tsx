@@ -196,7 +196,7 @@ export function CreateForm({ onBackClick }: Props) {
         <TooltipProvider>
             <div className="h-full overflow-hidden grid grid-cols-1 md:grid-cols-12">
                 {/* Left side - Form */}
-                <div className="flex-1 w-full flex flex-col justify-between p-6 py-5 gap-5 col-span-6">
+                <div className="flex-1 w-full flex flex-col justify-between order-last md:order-first p-6 py-5 gap-5 col-span-6">
                     <div className="flex flex-col gap-5">
                         <div className="flex flex-col gap-1">
                             <label className="text-xs text-black mb-1">Name</label>
@@ -259,7 +259,7 @@ export function CreateForm({ onBackClick }: Props) {
                     </div>
                 </div>
 
-                <div className="flex flex-col w-full border-l-[1.5px] p-6 py-5 w-full flex-1 h-[86.1vh] col-span-6 relative">
+                <div className="flex flex-col w-full md:border-l-[1.5px] p-6 py-5 w-full flex-1 h-[86.1vh] col-span-6 relative">
                     <div className="gap-2 top-0 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 mb-2">
                         <div className="font-medium text-[16px] text-[#565656] col-span-2">Categories:</div>
                         <div className="col-span-2 mb-2 lg:col-span-3 md:col-span-2 sm:col-span-3 flex gap-2 items-center flex-wrap">
