@@ -43,7 +43,6 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
                 className="p-4 px-5 text-sm w-[250px] flex flex-col"
                 style={{ 
                   maxWidth: 'calc(100vw - 40px)',
-                  transform: 'translateX(-40%)',
                   left: '50%'
                 }}
               >
