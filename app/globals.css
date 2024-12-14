@@ -7,6 +7,15 @@ body {
   background: transparent !important;
   background-color: transparent !important;
   height: fit-content;
+  height: 100%;
+}
+
+html {
+  height: 100%;
+}
+
+main {
+  height: 100%;
 }
 
 @layer base {

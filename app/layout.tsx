@@ -18,10 +18,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={cn(inter.className, "antialiased bg-white")}>
+    <html lang="en" className='h-full'>
+      <body className={cn(inter.className, "antialiased bg-white h-full")}>
         <QueryProvider>
-          <main className="max-w-[1440px] mx-auto">
+          <main className="max-w-[1440px] mx-auto h-full">
             {children}
           </main>
           <Toaster />

@@ -194,7 +194,7 @@ export function CreateForm({ onBackClick }: Props) {
 
     return (
         <TooltipProvider>
-            <div className="min-h-[75vh] md:max-h-[75vh] md:h-[75vh] overflow-hidden grid grid-cols-1 md:grid-cols-12">
+            <div className="h-full overflow-hidden grid grid-cols-1 md:grid-cols-12">
                 {/* Left side - Form */}
                 <div className="flex-1 w-full flex flex-col justify-between p-6 py-5 gap-5 col-span-6">
                     <div className="flex flex-col gap-5">
