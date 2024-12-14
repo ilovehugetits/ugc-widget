@@ -11,7 +11,7 @@ type Props = {
 
 async function getVideos(userId: string) {
   'use server'
-  
+
   try {
     const userVideos = await db.select({
       id: videos.id,
@@ -30,7 +30,7 @@ async function getVideos(userId: string) {
         )
       )
       .orderBy(videos.createdAt)
-    
+
     return userVideos as Video[]
   } catch (error) {
     console.error('Error fetching videos:', error)
@@ -74,14 +74,14 @@ export default async function VideosPage(props: Props) {
   const videosLeft = user.videoLimit - Number(videoCount?.length || 0)
 
   return (
-    <div className="flex gap-2 flex-col max-w-[1440px] mx-auto">
+    <div className="flex gap-2 flex-col max-w-[1440px] mx-auto h-full">
       <div className="flex flex-col md:flex-row items-center justify-between">
         <div className="font-semibold text-[1.53rem] text-[#00254d] flex items-center gap-3">
           AI UGC Video Creator
         </div>
       </div>
 
-      <VideoTabs 
+      <VideoTabs
         getVideos={getVideos}
         userId={user.id}
         videosLeft={videosLeft}

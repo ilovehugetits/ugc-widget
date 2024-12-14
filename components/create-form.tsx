@@ -221,7 +221,13 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                             <Textarea
                                 value={formData.script}
-                                onChange={(e) => setFormData(prev => ({ ...prev, script: e.target.value.slice(0, 1000) }))}
+                                onChange={(e) => {
+                                    const filteredValue = e.target.value.replace(/[™©®]/g, '');
+                                    setFormData(prev => ({ 
+                                        ...prev, 
+                                        script: filteredValue.slice(0, 1000) 
+                                    }));
+                                }}
                                 placeholder="Type your script here..."
                                 className="min-h-[200px] font-medium text-[#64748B] placeholder:text-[#64748B] placeholder:opacity-80"
                             />

@@ -21,8 +21,8 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
   const [activeTab, setActiveTab] = useState("videos")
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <div className="flex flex-col-reverse md:flex-row gap-y-4 items-center justify-between mb-4">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-[87vh] flex flex-col">
+      <div className="flex flex-col-reverse md:flex-row gap-y-4 items-center justify-between mb-0">
         <TabsList>
           <TabsTrigger value="videos">All Videos</TabsTrigger>
           <TabsTrigger value="create">Create Video</TabsTrigger>

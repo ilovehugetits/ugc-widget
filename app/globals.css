@@ -7,7 +7,6 @@ body {
   background: transparent !important;
   background-color: transparent !important;
   height: fit-content;
-  zoom: 1.05;
 }
 
 @layer base {
