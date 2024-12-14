@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FaPlay, FaDownload, FaTrash } from 'react-icons/fa'
+import { FaPlay, FaEllipsisV } from 'react-icons/fa'
 import { useToast } from "@/hooks/use-toast"
 import {
     Dialog,
@@ -12,6 +12,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { deleteVideo } from "@/app/actions"
@@ -168,30 +174,40 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                     </div>
                                 </>
                             )}
+                            <div className="absolute z-50 right-2 top-2">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon"
+                                            className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                                        >
+                                            <FaEllipsisV className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                        {video.status === 'completed' && (
+                                            <DropdownMenuItem
+                                                onClick={() => handleDownloadClick(video.cdnUrl, video.id)}
+                                                className="cursor-pointer"
+                                            >
+                                                Download Video
+                                            </DropdownMenuItem>
+                                        )}
+                                        <DropdownMenuItem
+                                            onClick={() => setVideoToDelete(video.id)}
+                                            className="cursor-pointer text-destructive focus:text-destructive"
+                                        >
+                                            Delete Video
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
 
                         <div className="text-center w-full mt-2">
                             <div className="text-[#727272] text-[15px] font-medium line-clamp-1">
                                 {video.name.charAt(0).toUpperCase() + video.name.slice(1)}
-                            </div>
-                        </div>
-
-                        <div className="absolute z-50 left-0 right-0 top-0">
-                            <div className="invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all absolute top-0 right-0 m-2 flex">
-                                {video.status === 'completed' && (
-                                    <div
-                                        onClick={() => handleDownloadClick(video.cdnUrl, video.id)}
-                                        className="cursor-pointer bg-white text-white text-opacity-70 hover:text-opacity-100 transition-all bg-opacity-15 rounded-lg w-8 h-8 flex items-center justify-center mr-2"
-                                    >
-                                        <FaDownload className="text-sm" />
-                                    </div>
-                                )}
-                                <div
-                                    onClick={() => setVideoToDelete(video.id)}
-                                    className="cursor-pointer bg-white text-white text-opacity-70 hover:text-opacity-100 transition-all bg-opacity-15 rounded-lg w-8 h-8 flex items-center justify-center"
-                                >
-                                    <FaTrash className="text-sm" />
-                                </div>
                             </div>
                         </div>
                     </div>
