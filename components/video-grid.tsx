@@ -23,6 +23,11 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { deleteVideo } from "@/app/actions"
 import axios from 'axios'
 
+import {
+    Download,
+    Trash
+} from 'lucide-react';
+
 export interface Video {
     id: string
     cdnUrl: string
@@ -180,7 +185,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
-                                            className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                                            className="h-8 w-8 bg-white/20 hover:bg-white/20 text-white hover:text-neutral-200 rounded-full"
                                         >
                                             <FaEllipsisV className="h-4 w-4" />
                                         </Button>
@@ -191,14 +196,16 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                                 onClick={() => handleDownloadClick(video.cdnUrl, video.id)}
                                                 className="cursor-pointer"
                                             >
-                                                Download Video
+                                                <Download className="h-4 w-4 mr-2" />
+                                                Download
                                             </DropdownMenuItem>
                                         )}
                                         <DropdownMenuItem
                                             onClick={() => setVideoToDelete(video.id)}
                                             className="cursor-pointer text-destructive focus:text-destructive"
                                         >
-                                            Delete Video
+                                            <Trash className="h-4 w-4 mr-2" />
+                                            Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
