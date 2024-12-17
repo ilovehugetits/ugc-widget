@@ -25,7 +25,8 @@ import axios from 'axios'
 
 import {
     Download,
-    Trash
+    Trash,
+    FileText
 } from 'lucide-react';
 
 export interface Video {
@@ -36,6 +37,7 @@ export interface Video {
     createdAt: Date
     status: 'queued' | 'processing' | 'completed' | 'failed' | 'deleted'
     actorId: string
+    script?: string
 }
 
 interface Props {
@@ -46,6 +48,7 @@ interface Props {
 export function VideoGrid({ getVideos, onCreateClick }: Props) {
     const [activeVideo, setActiveVideo] = useState<string | null>(null)
     const [videoToDelete, setVideoToDelete] = useState<string | null>(null)
+    const [scriptToView, setScriptToView] = useState<string | null>(null)
     const { toast } = useToast()
 
     const { data: videos = [], refetch } = useQuery<Video[]>({
@@ -185,9 +188,9 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
-                                            className="h-8 w-8 bg-white/20 hover:bg-white/20 text-white hover:text-neutral-200 rounded-full"
+                                            className="h-8 w-8 bg-white/20 hover:bg-white/20 text-white hover:text-neutral-200 rounded-xl backdrop-blur-sm"
                                         >
-                                            <FaEllipsisV className="h-4 w-4" />
+                                            <FaEllipsisV className="h-3.5 w-3.5" />
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-40">
@@ -198,6 +201,15 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                             >
                                                 <Download className="h-4 w-4 mr-2" />
                                                 Download
+                                            </DropdownMenuItem>
+                                        )}
+                                        {video.script && (
+                                            <DropdownMenuItem
+                                                onClick={() => setScriptToView(video.script || '')}
+                                                className="cursor-pointer"
+                                            >
+                                                <FileText className="h-4 w-4 mr-2" />
+                                                View Script
                                             </DropdownMenuItem>
                                         )}
                                         <DropdownMenuItem
@@ -220,6 +232,24 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                     </div>
                 ))}
             </div>
+
+            <Dialog open={!!scriptToView} onOpenChange={() => setScriptToView(null)}>
+                <DialogContent className="sm:max-w-[525px]">
+                    <DialogHeader>
+                        <DialogTitle>Video Script</DialogTitle>
+                    </DialogHeader>
+                    <div className="mt-4 max-h-[60vh] overflow-y-auto">
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                            {scriptToView}
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => setScriptToView(null)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={!!videoToDelete} onOpenChange={() => setVideoToDelete(null)}>
                 <DialogContent>

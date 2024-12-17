@@ -20,7 +20,8 @@ async function getVideos(userId: string) {
       name: videos.name,
       createdAt: videos.createdAt,
       status: videos.status,
-      actorId: videos.actorId
+      actorId: videos.actorId,
+      script: videos.script
     })
       .from(videos)
       .where(
