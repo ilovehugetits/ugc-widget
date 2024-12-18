@@ -323,9 +323,21 @@ export function CreateForm({ onBackClick }: Props) {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Left Column - Sliders */}
                                 <div className="flex flex-col gap-4">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <div className="flex justify-between">
-                                            <label className="text-xs text-gray-600">Stability</label>
+                                            <div className="flex items-center gap-1">
+                                                <label className="text-xs text-gray-600">Stability</label>
+                                                <Tooltip delayDuration={0}>
+                                                    <TooltipTrigger asChild>
+                                                        <svg className="w-3.5 h-3.5 text-gray-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[200px] text-xs">
+                                                        Adjusts how stable the voice sounds. Lower values make speech more dynamic and expressive, while higher values keep it more consistent and monotone.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
                                             <span className="text-xs text-gray-600">{audioSettings.stability.toFixed(1)}</span>
                                         </div>
                                         <Slider
@@ -337,9 +349,21 @@ export function CreateForm({ onBackClick }: Props) {
                                         />
                                     </div>
 
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <div className="flex justify-between">
-                                            <label className="text-xs text-gray-600">Similarity</label>
+                                            <div className="flex items-center gap-1">
+                                                <label className="text-xs text-gray-600">Similarity</label>
+                                                <Tooltip delayDuration={0}>
+                                                    <TooltipTrigger asChild>
+                                                        <svg className="w-3.5 h-3.5 text-gray-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[200px] text-xs">
+                                                        Controls how closely the generated voice matches the selected actor's original tone and pronunciation. Lower values allow more creative freedom, while higher values prioritize accuracy.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
                                             <span className="text-xs text-gray-600">{audioSettings.similarity.toFixed(1)}</span>
                                         </div>
                                         <Slider
@@ -351,9 +375,21 @@ export function CreateForm({ onBackClick }: Props) {
                                         />
                                     </div>
 
-                                    <div className="space-y-1">
+                                    <div className="space-y-1.5">
                                         <div className="flex justify-between">
-                                            <label className="text-xs text-gray-600">Style</label>
+                                            <div className="flex items-center gap-1">
+                                                <label className="text-xs text-gray-600">Style</label>
+                                                <Tooltip delayDuration={0}>
+                                                    <TooltipTrigger asChild>
+                                                        <svg className="w-3.5 h-3.5 text-gray-500 cursor-pointer" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[200px] text-xs">
+                                                        Influences the emotional style and delivery of the speech. A higher value creates more expressive and stylized speech, while lower values sound more neutral.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            </div>
                                             <span className="text-xs text-gray-600">{audioSettings.style.toFixed(1)}</span>
                                         </div>
                                         <Slider
@@ -378,43 +414,53 @@ export function CreateForm({ onBackClick }: Props) {
                                             <audio controls className="w-full" src={previewAudio}>
                                                 Your browser does not support the audio element.
                                             </audio>
-                                            <Button
-                                                onClick={handleGeneratePreview}
-                                                disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
-                                                className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
-                                            >
-                                                {generatePreviewMutation.isPending ? (
-                                                    <>
-                                                        <span className="loading loading-spinner loading-sm mr-2"></span>
-                                                        Generating...
-                                                    </>
-                                                ) : (
-                                                    'Generate Preview'
-                                                )}
-                                            </Button>
+                                            <Tooltip delayDuration={0}>
+                                                <TooltipTrigger asChild>
+                                                    <div className="w-full">
+                                                        <Button
+                                                            onClick={handleGeneratePreview}
+                                                            disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
+                                                            className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
+                                                        >
+                                                            Generate Preview
+                                                        </Button>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    {!selectedActor 
+                                                        ? "Please select an actor first"
+                                                        : !formData.script.trim()
+                                                            ? "Please write a script first"
+                                                            : "Generate audio preview"}
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
                                     ) : (
                                         <div>
                                             <div className="text-sm text-gray-500 text-center">
                                                 Generate a preview to hear your script
                                             </div>
-                                            <Button
-                                                onClick={handleGeneratePreview}
-                                                disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
-                                                className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
-                                            >
-                                                {generatePreviewMutation.isPending ? (
-                                                    <>
-                                                        <span className="loading loading-spinner loading-sm mr-2"></span>
-                                                        Generating...
-                                                    </>
-                                                ) : (
-                                                    'Generate Preview'
-                                                )}
-                                            </Button>
+                                            <Tooltip delayDuration={0}>
+                                                <TooltipTrigger asChild>
+                                                    <div className="w-full">
+                                                        <Button
+                                                            onClick={handleGeneratePreview}
+                                                            disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
+                                                            className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
+                                                        >
+                                                            Generate Preview
+                                                        </Button>
+                                                    </div>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    {!selectedActor 
+                                                        ? "Please select an actor first"
+                                                        : !formData.script.trim()
+                                                            ? "Please write a script first"
+                                                            : "Generate audio preview"}
+                                                </TooltipContent>
+                                            </Tooltip>
                                         </div>
-
-
                                     )}
                                 </div>
                             </div>
