@@ -302,9 +302,9 @@ export function CreateForm({ onBackClick }: Props) {
                                 value={formData.script}
                                 onChange={(e) => {
                                     const filteredValue = e.target.value.replace(/[™©®]/g, '');
-                                    setFormData(prev => ({ 
-                                        ...prev, 
-                                        script: filteredValue.slice(0, 1000) 
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        script: filteredValue.slice(0, 1000)
                                     }));
                                 }}
                                 placeholder="Type your script here..."
@@ -364,21 +364,6 @@ export function CreateForm({ onBackClick }: Props) {
                                             onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, style: value }))}
                                         />
                                     </div>
-
-                                    <Button
-                                        onClick={handleGeneratePreview}
-                                        disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
-                                        className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
-                                    >
-                                        {generatePreviewMutation.isPending ? (
-                                            <>
-                                                <span className="loading loading-spinner loading-sm mr-2"></span>
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            'Generate Preview'
-                                        )}
-                                    </Button>
                                 </div>
 
                                 {/* Right Column - Audio Preview */}
@@ -393,11 +378,43 @@ export function CreateForm({ onBackClick }: Props) {
                                             <audio controls className="w-full" src={previewAudio}>
                                                 Your browser does not support the audio element.
                                             </audio>
+                                            <Button
+                                                onClick={handleGeneratePreview}
+                                                disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
+                                                className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
+                                            >
+                                                {generatePreviewMutation.isPending ? (
+                                                    <>
+                                                        <span className="loading loading-spinner loading-sm mr-2"></span>
+                                                        Generating...
+                                                    </>
+                                                ) : (
+                                                    'Generate Preview'
+                                                )}
+                                            </Button>
                                         </div>
                                     ) : (
-                                        <div className="text-sm text-gray-500 text-center">
-                                            Generate a preview to hear your script
+                                        <div>
+                                            <div className="text-sm text-gray-500 text-center">
+                                                Generate a preview to hear your script
+                                            </div>
+                                            <Button
+                                                onClick={handleGeneratePreview}
+                                                disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
+                                                className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
+                                            >
+                                                {generatePreviewMutation.isPending ? (
+                                                    <>
+                                                        <span className="loading loading-spinner loading-sm mr-2"></span>
+                                                        Generating...
+                                                    </>
+                                                ) : (
+                                                    'Generate Preview'
+                                                )}
+                                            </Button>
                                         </div>
+
+
                                     )}
                                 </div>
                             </div>
