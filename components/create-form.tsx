@@ -323,10 +323,10 @@ export function CreateForm({ onBackClick }: Props) {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Left Column - Sliders */}
                                 <div className="flex flex-col gap-4">
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <div className="flex justify-between">
-                                            <label className="text-sm text-gray-600">Stability</label>
-                                            <span className="text-sm text-gray-600">{audioSettings.stability.toFixed(1)}</span>
+                                            <label className="text-xs text-gray-600">Stability</label>
+                                            <span className="text-xs text-gray-600">{audioSettings.stability.toFixed(1)}</span>
                                         </div>
                                         <Slider
                                             value={[audioSettings.stability]}
@@ -337,10 +337,10 @@ export function CreateForm({ onBackClick }: Props) {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <div className="flex justify-between">
-                                            <label className="text-sm text-gray-600">Similarity</label>
-                                            <span className="text-sm text-gray-600">{audioSettings.similarity.toFixed(1)}</span>
+                                            <label className="text-xs text-gray-600">Similarity</label>
+                                            <span className="text-xs text-gray-600">{audioSettings.similarity.toFixed(1)}</span>
                                         </div>
                                         <Slider
                                             value={[audioSettings.similarity]}
@@ -351,10 +351,10 @@ export function CreateForm({ onBackClick }: Props) {
                                         />
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <div className="flex justify-between">
-                                            <label className="text-sm text-gray-600">Style</label>
-                                            <span className="text-sm text-gray-600">{audioSettings.style.toFixed(1)}</span>
+                                            <label className="text-xs text-gray-600">Style</label>
+                                            <span className="text-xs text-gray-600">{audioSettings.style.toFixed(1)}</span>
                                         </div>
                                         <Slider
                                             value={[audioSettings.style]}
