@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FaPlay } from 'react-icons/fa'
 import { useToast } from "@/hooks/use-toast"
 import { actors } from '@/db/schema'
-import { getActors, createVideo, generateScript } from "@/app/actions"
+import { getActors, createVideo, generateScript, generateAudioPreview } from "@/app/actions"
 import {
     Dialog,
     DialogContent,
@@ -24,6 +24,8 @@ import {
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
+import { Slider } from "@/components/ui/slider";
+import { useRateLimit } from "@/hooks/use-rate-limit"
 
 type ActorWithoutRelations = Omit<typeof actors.$inferSelect, 'videos'>
 
@@ -65,6 +67,15 @@ export function CreateForm({ onBackClick }: Props) {
         productInfo: '',
         productDesc: ''
     })
+
+    const [audioSettings, setAudioSettings] = useState({
+        stability: 0.1,
+        similarity: 0.3,
+        style: 0.2
+    });
+    const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+
+    const { canMakeRequest, incrementRequestCount } = useRateLimit('audio_preview', 20);
 
     // Fetch actors using server action
     const { data: actors = [] } = useQuery<ActorWithoutRelations[]>({
@@ -162,6 +173,74 @@ export function CreateForm({ onBackClick }: Props) {
         }
     })
 
+    const generatePreviewMutation = useMutation({
+        mutationFn: async () => {
+            if (!formData.script || !selectedActor) {
+                throw new Error('Script and actor selection are required');
+            }
+
+            const audioStream = await generateAudioPreview(
+                formData.script,
+                actors.find(a => a.id === selectedActor)?.voiceId || '',
+                audioSettings
+            );
+
+            return audioStream;
+        },
+        onSuccess: (audioStream) => {
+            const audioUrl = `data:audio/mpeg;base64,${audioStream}`;
+            setPreviewAudio(audioUrl);
+            incrementRequestCount();
+            toast({ title: "Audio preview generated successfully" });
+        },
+        onError: (error) => {
+            toast({
+                variant: "destructive",
+                title: "Failed to generate audio preview",
+                description: error instanceof Error ? error.message : "Please try again later."
+            });
+        }
+    });
+
+    const handleGeneratePreview = () => {
+        if (!selectedActor) {
+            toast({
+                variant: "destructive",
+                title: "Actor selection required",
+                description: "Please select an actor before generating preview"
+            });
+            return;
+        }
+
+        if (!formData.script.trim()) {
+            toast({
+                variant: "destructive",
+                title: "Script is required",
+                description: "Please enter a script before generating preview"
+            });
+            return;
+        }
+
+        if (!canMakeRequest) {
+            toast({
+                variant: "destructive",
+                title: "Rate limit exceeded",
+                description: "You can only generate 10 previews per hour"
+            });
+            return;
+        }
+
+        generatePreviewMutation.mutate();
+    };
+
+    useEffect(() => {
+        return () => {
+            if (previewAudio) {
+                URL.revokeObjectURL(previewAudio);
+            }
+        };
+    }, [previewAudio]);
+
     const handleGenerateScript = () => {
         if (!formData.productInfo.trim()) {
             toast({
@@ -231,9 +310,95 @@ export function CreateForm({ onBackClick }: Props) {
                                 placeholder="Type your script here..."
                                 className="min-h-[200px] font-medium text-[#64748B] placeholder:text-[#64748B] placeholder:opacity-80"
                             />
-                            <div className="flex items-center justify-end mt-1">
+                            <div className="flex items-center justify-end mt-1 absolute -bottom-6 right-0">
                                 <div className="text-[13px] font-medium text-[#9C9C9C]">
                                     <span className="text-[#565656]">{formData.script.length}</span>/1000
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Audio Settings Section */}
+                        <div className="flex flex-col gap-1">
+                            <label className="font-semibold text-black">Audio Settings</label>
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Left Column - Sliders */}
+                                <div className="flex flex-col gap-4">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <label className="text-sm text-gray-600">Stability</label>
+                                            <span className="text-sm text-gray-600">{audioSettings.stability.toFixed(1)}</span>
+                                        </div>
+                                        <Slider
+                                            value={[audioSettings.stability]}
+                                            min={0.1}
+                                            max={1.0}
+                                            step={0.1}
+                                            onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, stability: value }))}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <label className="text-sm text-gray-600">Similarity</label>
+                                            <span className="text-sm text-gray-600">{audioSettings.similarity.toFixed(1)}</span>
+                                        </div>
+                                        <Slider
+                                            value={[audioSettings.similarity]}
+                                            min={0.1}
+                                            max={1.0}
+                                            step={0.1}
+                                            onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, similarity: value }))}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <label className="text-sm text-gray-600">Style</label>
+                                            <span className="text-sm text-gray-600">{audioSettings.style.toFixed(1)}</span>
+                                        </div>
+                                        <Slider
+                                            value={[audioSettings.style]}
+                                            min={0.1}
+                                            max={1.0}
+                                            step={0.1}
+                                            onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, style: value }))}
+                                        />
+                                    </div>
+
+                                    <Button
+                                        onClick={handleGeneratePreview}
+                                        disabled={generatePreviewMutation.isPending || !formData.script.trim() || !selectedActor}
+                                        className="w-full mt-2 bg-[#046AD4] text-white rounded-lg hover:bg-[#0069d9] font-medium"
+                                    >
+                                        {generatePreviewMutation.isPending ? (
+                                            <>
+                                                <span className="loading loading-spinner loading-sm mr-2"></span>
+                                                Generating...
+                                            </>
+                                        ) : (
+                                            'Generate Preview'
+                                        )}
+                                    </Button>
+                                </div>
+
+                                {/* Right Column - Audio Preview */}
+                                <div className="flex flex-col items-center justify-center border rounded-lg p-4">
+                                    {generatePreviewMutation.isPending ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                                            <p className="text-sm text-gray-600">Generating preview...</p>
+                                        </div>
+                                    ) : previewAudio ? (
+                                        <div className="w-full space-y-4">
+                                            <audio controls className="w-full" src={previewAudio}>
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                        </div>
+                                    ) : (
+                                        <div className="text-sm text-gray-500 text-center">
+                                            Generate a preview to hear your script
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
