@@ -330,13 +330,24 @@ export function CreateForm({ onBackClick }: Props) {
                 <div className="flex-1 w-full flex flex-col justify-between order-last md:order-first p-6 py-5 gap-5 col-span-6">
                     <div className="flex flex-col gap-5">
                         <div className="flex flex-col gap-1">
-                            <label className="text-xs text-black mb-1">Name</label>
-                            <Input
-                                value={formData.name}
-                                placeholder="Enter video name..."
-                                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value.slice(0, 100) }))}
-                                className="pr-40 font-medium text-[#64748B] placeholder:text-[#64748B] placeholder:opacity-80"
-                            />
+                            <label className="text-xs text-black mb-1">
+                                Name <span className="text-red-500">*</span>
+                            </label>
+                            <Tooltip delayDuration={0}>
+                                <TooltipTrigger asChild>
+                                    <div>
+                                        <Input
+                                            value={formData.name}
+                                            placeholder="Enter video name..."
+                                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value.slice(0, 100) }))}
+                                            className="pr-40 font-medium text-[#64748B] placeholder:text-[#64748B] placeholder:opacity-80"
+                                        />
+                                    </div>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {!formData.name.trim() && "Please enter a video name"}
+                                </TooltipContent>
+                            </Tooltip>
                         </div>
 
                         <div className="flex flex-col gap-1 relative">
@@ -523,14 +534,41 @@ export function CreateForm({ onBackClick }: Props) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={createMutation.isPending}
-                        className="w-[120px] bg-[#046AD4] h-14 hover:bg-[#0069d9] rounded-[8px] font-normal"
-                        size="big"
-                    >
-                        {createMutation.isPending ? "Creating..." : "Create"}
-                    </Button>
+                    {(!selectedActor || !formData.script.trim() || !formData.name.trim() || createMutation.isPending) ? (
+                        <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                                <div>
+                                    <Button
+                                        onClick={handleSubmit}
+                                        disabled={true}
+                                        className="w-[120px] bg-[#046AD4] h-14 hover:bg-[#0069d9] rounded-[8px] font-normal"
+                                        size="big"
+                                    >
+                                        {createMutation.isPending ? "Creating..." : "Create"}
+                                    </Button>
+                                </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {createMutation.isPending 
+                                    ? "Creating your video..."
+                                    : !selectedActor
+                                        ? "Please select an actor"
+                                        : !formData.name.trim()
+                                            ? "Please enter a video name"
+                                            : !formData.script.trim()
+                                                ? "Please write a script"
+                                                : null}
+                            </TooltipContent>
+                        </Tooltip>
+                    ) : (
+                        <Button
+                            onClick={handleSubmit}
+                            className="w-[120px] bg-[#046AD4] h-14 hover:bg-[#0069d9] rounded-[8px] font-normal"
+                            size="big"
+                        >
+                            Create
+                        </Button>
+                    )}
                     <Button
                         onClick={onBackClick}
                         variant="outline"
