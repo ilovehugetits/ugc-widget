@@ -26,7 +26,9 @@ import axios from 'axios'
 import {
     Download,
     Trash,
-    FileText
+    FileText,
+    Copy,
+    Check
 } from 'lucide-react';
 
 export interface Video {
@@ -49,6 +51,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
     const [activeVideo, setActiveVideo] = useState<string | null>(null)
     const [videoToDelete, setVideoToDelete] = useState<string | null>(null)
     const [scriptToView, setScriptToView] = useState<string | null>(null)
+    const [copied, setCopied] = useState(false)
     const { toast } = useToast()
 
     const { data: videos = [], refetch } = useQuery<Video[]>({
@@ -120,6 +123,16 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
         }
     }
 
+    const handleCopy = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch (err) {
+            console.error('Failed to copy text:', err)
+        }
+    }
+
     if (filteredVideos.length === 0) {
         return (
             <div className="gap-3 w-full grid lg:grid-cols-5 md:grid-cols-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
@@ -165,7 +178,9 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                         onClick={() => handleThumbnailClick(video.id, video.status)}
                                     >
                                         {video.status === 'completed' ? (
-                                            <FaPlay className="text-white text-4xl" />
+                                            <div className="flex flex-col bg-white/20 rounded-full h-12 w-12 backdrop-blur-sm items-center justify-center">
+                                                <FaPlay className="text-white h-5 h-5 pl-0.5" />
+                                            </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center">
                                                 <div className="text-white text-xl leading-6 text-center font-semibold px-4 mb-1">
@@ -188,35 +203,35 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                         <Button 
                                             variant="ghost" 
                                             size="icon"
-                                            className="h-8 w-8 bg-white/20 hover:bg-white/20 text-white hover:text-neutral-200 rounded-xl backdrop-blur-sm"
+                                            className="h-7 w-7 bg-white/20 hover:bg-white/20 text-white hover:text-neutral-200 rounded-lg backdrop-blur-sm"
                                         >
-                                            <FaEllipsisV className="h-3.5 w-3.5" />
+                                            <FaEllipsisV className='text-xs !h-3.5 !size-2' size={6}/>
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-40">
                                         {video.status === 'completed' && (
                                             <DropdownMenuItem
                                                 onClick={() => handleDownloadClick(video.cdnUrl, video.id)}
-                                                className="cursor-pointer"
+                                                className="cursor-pointer text-sm"
                                             >
-                                                <Download className="h-4 w-4 mr-2" />
+                                                <Download className="h-4 w-4 mr-1.5" />
                                                 Download
                                             </DropdownMenuItem>
                                         )}
                                         {video.script && (
                                             <DropdownMenuItem
                                                 onClick={() => setScriptToView(video.script || '')}
-                                                className="cursor-pointer"
+                                                className="cursor-pointer text-sm"
                                             >
-                                                <FileText className="h-4 w-4 mr-2" />
+                                                <FileText className="h-4 w-4 mr-1.5" />
                                                 View Script
                                             </DropdownMenuItem>
                                         )}
                                         <DropdownMenuItem
                                             onClick={() => setVideoToDelete(video.id)}
-                                            className="cursor-pointer text-destructive focus:text-destructive"
+                                            className="cursor-pointer text-sms text-destructive focus:text-destructive"
                                         >
-                                            <Trash className="h-4 w-4 mr-2" />
+                                            <Trash className="h-4 w-4 mr-1.5" />
                                             Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -236,12 +251,32 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
             <Dialog open={!!scriptToView} onOpenChange={() => setScriptToView(null)}>
                 <DialogContent className="sm:max-w-[525px]">
                     <DialogHeader>
-                        <DialogTitle>Video Script</DialogTitle>
+                        <DialogTitle className="flex items-center justify-between">
+                            <span>Video Script</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2 gap-1.5"
+                                onClick={() => scriptToView && handleCopy(scriptToView)}
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check className="h-4 w-4" />
+                                        <span>Copied!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy className="h-4 w-4" />
+                                        <span>Copy</span>
+                                    </>
+                                )}
+                            </Button>
+                        </DialogTitle>
                     </DialogHeader>
-                    <div className="mt-4 max-h-[60vh] overflow-y-auto">
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
                             {scriptToView}
-                        </p>
+                        </div>
                     </div>
                     <DialogFooter>
                         <Button variant="secondary" onClick={() => setScriptToView(null)}>

@@ -135,8 +135,17 @@ export async function createVideo(data: {
 export async function generateScript(data: {
     productInfo: string;
     productDesc: string;
+    style: string;
 }) {
     try {
+        const stylePrompts = {
+            regular: "Create a clear and professional script",
+            storytelling: "Create an engaging narrative script that tells a story about",
+            casual: "Create a friendly and conversational script"
+        };
+
+        const basePrompt = stylePrompts[data.style as keyof typeof stylePrompts] || stylePrompts.regular;
+        
         const response = await openai.chat.completions.create({
             model: "gpt-4o-mini-2024-07-18",
             messages: [
