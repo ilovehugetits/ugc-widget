@@ -36,7 +36,15 @@ interface Props {
 }
 
 export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
-  const [activeTab, setActiveTab] = useState("create")
+  // Get URL parameters and set initial tab accordingly
+  const [activeTab, setActiveTab] = useState(() => {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      return params.get('videos') == 'true' ? 'videos' : 'create'
+    }
+    return 'create'
+  })
 
   return (
     <TabContext.Provider value={{ activeTab, setActiveTab }}>
