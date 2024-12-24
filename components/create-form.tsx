@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { FaPlay } from 'react-icons/fa'
 import { useToast } from "@/hooks/use-toast"
 import { actors } from '@/db/schema'
@@ -327,6 +327,49 @@ export function CreateForm({ onBackClick }: Props) {
 
     const [selectedStyle, setSelectedStyle] = useState<string>('regular');
 
+    // Add this state to track hover timer
+    const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null)
+
+    // Add new state to track if video was activated by hover
+    const [isHoverActivated, setIsHoverActivated] = useState(false)
+
+    // Add these handlers for hover events
+    const handleActorHover = useCallback((actorName: string) => {
+        const timer = setTimeout(() => {
+            setActiveActor(actorName)
+            setIsHoverActivated(true)  // Mark that this was activated by hover
+        }, 2000)
+        
+        setHoverTimer(timer)
+    }, [])
+
+    // Update handleActorHoverEnd to only clear activeActor if it was hover-activated
+    const handleActorHoverEnd = useCallback(() => {
+        if (hoverTimer) {
+            clearTimeout(hoverTimer)
+            setHoverTimer(null)
+        }
+        if (isHoverActivated) {
+            setActiveActor(null)
+            setIsHoverActivated(false)
+        }
+    }, [hoverTimer, isHoverActivated])
+
+    // Update the click handler to set isHoverActivated to false
+    const handlePlayClick = (actorName: string) => {
+        setActiveActor(actorName)
+        setIsHoverActivated(false)  // Mark that this was activated by click
+    }
+
+    // Clean up timer on unmount
+    useEffect(() => {
+        return () => {
+            if (hoverTimer) {
+                clearTimeout(hoverTimer)
+            }
+        }
+    }, [hoverTimer])
+
     return (
         <TooltipProvider>
             <div className="h-full overflow-hidden grid grid-cols-1 md:grid-cols-12">
@@ -610,12 +653,14 @@ export function CreateForm({ onBackClick }: Props) {
                     </div>
                 </div>
 
-                <div className="scrollBar overflow-y-auto flex-1 rounded-t-[8px]">
+                <div className="overflow-y-auto flex-1 rounded-t-[8px]">
                     <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 pb-4">
                         {filteredActors.map(actor => (
                             <div
                                 key={actor.id}
                                 className={`transition-all overflow-hidden aspect-[5/7] h-max group rounded-[8px] relative flex flex-col ${selectedActor === actor.id ? 'border-[3px] border-[#0069d9]' : ''}`}
+                                onMouseEnter={() => handleActorHover(actor.name)}
+                                onMouseLeave={handleActorHoverEnd}
                             >
                                 {activeActor === actor.name ? (
                                     <video
@@ -635,7 +680,7 @@ export function CreateForm({ onBackClick }: Props) {
                                         />
                                         <div
                                             className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer"
-                                            onClick={() => setActiveActor(actor.name)}
+                                            onClick={() => handlePlayClick(actor.name)}
                                         >
                                             <FaPlay className="text-white text-2xl" />
                                         </div>
@@ -816,20 +861,6 @@ export function CreateForm({ onBackClick }: Props) {
                     </div>
                 </DialogContent>
             </Dialog>
-
-            <style jsx>{`
-        .scrollBar::-webkit-scrollbar {
-          width: 9px;
-        }
-        .scrollBar::-webkit-scrollbar-track {
-          background: #F4F4F4;
-          border-radius: 10px;
-        }
-        .scrollBar::-webkit-scrollbar-thumb {
-          background: #0C5EB3;
-          border-radius: 10px;
-        }
-      `}</style>
         </div>
         </TooltipProvider >
     )
