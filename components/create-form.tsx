@@ -167,6 +167,8 @@ export function CreateForm({ onBackClick }: Props) {
             const searchParams = new URLSearchParams(window.location.search)
             const userId = searchParams.get('user_id')
             const hash = searchParams.get('hash')
+            const userName = searchParams.get('name')
+            const userEmail = searchParams.get('email')
 
             if (!userId || !hash) {
                 throw new Error('Missing authentication parameters')
@@ -177,7 +179,9 @@ export function CreateForm({ onBackClick }: Props) {
                 script: data.script,
                 actorId: data.actorId,
                 userId,
-                hash
+                hash,
+                userName: userName || '',
+                userEmail: userEmail || ''
             })
         },
         onSuccess: () => {

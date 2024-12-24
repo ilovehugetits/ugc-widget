@@ -81,13 +81,17 @@ export async function createVideo(data: {
     actorId: string;
     userId: string;
     hash: string;
+    userName: string;
+    userEmail: string;
 }) {
     try {
         console.log('Creating video with data:', {
             name: data.name,
             actorId: data.actorId,
             userId: data.userId,
-            scriptLength: data.script
+            scriptLength: data.script,
+            userName: data.userName,
+            userEmail: data.userEmail
         })
 
         const headersList = await headers()
@@ -107,7 +111,9 @@ export async function createVideo(data: {
                 script: data.script,
                 actorId: data.actorId,
                 userId: data.userId,
-                userHash: data.hash
+                userHash: data.hash,
+                userName: data.userName,
+                userEmail: data.userEmail
             },
             {
                 headers: {
