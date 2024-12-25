@@ -362,7 +362,7 @@ export function CreateForm({ onBackClick }: Props) {
         const timer = setTimeout(() => {
             setActiveActor(actorName)
             setIsHoverActivated(true)  // Mark that this was activated by hover
-        }, 2000)
+        }, 500)
 
         setHoverTimer(timer)
     }, [])
