@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { Inter } from 'next/font/google'
 
 import { Toaster } from "@/components/ui/toaster"
+import { AudioUploadProvider } from "@/contexts/audio-upload-context"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,12 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en" className='h-full'>
       <body className={cn(inter.className, "antialiased bg-white h-full")}>
-        <QueryProvider>
-          <main className="max-w-[1440px] mx-auto h-full">
-            {children}
-          </main>
-          <Toaster />
-        </QueryProvider>
+        <AudioUploadProvider>
+          <QueryProvider>
+            <main className="max-w-[1440px] mx-auto h-full">
+              {children}
+            </main>
+            <Toaster />
+          </QueryProvider>
+        </AudioUploadProvider>
       </body>
     </html>
   )

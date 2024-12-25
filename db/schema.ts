@@ -34,7 +34,6 @@ export const users = pgTable('users', {
     name: varchar('name', { length: 255 })
 })
 
-// Actors table
 export const actors = pgTable('actors', {
     id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),

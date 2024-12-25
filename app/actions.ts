@@ -83,15 +83,17 @@ export async function createVideo(data: {
     hash: string;
     userName: string;
     userEmail: string;
+    audioUrl?: string;
 }) {
     try {
         console.log('Creating video with data:', {
             name: data.name,
             actorId: data.actorId,
             userId: data.userId,
-            scriptLength: data.script,
+            script: data.script,
             userName: data.userName,
-            userEmail: data.userEmail
+            userEmail: data.userEmail,
+            audioUrl: data.audioUrl
         })
 
         const headersList = await headers()
@@ -113,7 +115,8 @@ export async function createVideo(data: {
                 userId: data.userId,
                 userHash: data.hash,
                 userName: data.userName,
-                userEmail: data.userEmail
+                userEmail: data.userEmail,
+                audioUrl: data.audioUrl
             },
             {
                 headers: {
@@ -157,7 +160,7 @@ export async function generateScript(data: {
             messages: [
                 {
                     role: "system",
-                    content: "You are a creative scriptwriter specializing in short, engaging UGC (User Generated Content) style video scripts. Maximum length 900 dont go above 900 characters!"
+                    content: "You are a creative scriptwriter specializing in short, engaging UGC (User Generated Content) style video scripts. Maximum length 900 dont go above 900 characters!" + basePrompt
                 },
                 {
                     role: "user",

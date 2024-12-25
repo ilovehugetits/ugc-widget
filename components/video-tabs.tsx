@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs2"
 import { VideoGrid } from "@/components/video-grid"
 import { CreateForm } from "@/components/create-form"
 import {
