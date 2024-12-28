@@ -89,7 +89,7 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
           />
         </TabsContent>
 
-        <TabsContent value="create" className="bg-white rounded-[6px] flex-1">
+        <TabsContent value="create" className="rounded-[6px] flex-1">
           <CreateForm 
             onBackClick={() => setActiveTab("videos")}
           />

@@ -4,8 +4,8 @@
 
 body {
   font-family: 'Inter', Helvetica, sans-serif;
-  background: transparent !important;
-  background-color: transparent !important;
+  background: #fafafd !important;
+  background-color: #fafafd  !important;
   height: fit-content;
   height: 100%;
   pointer-events: all !important;

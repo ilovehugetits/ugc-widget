@@ -320,7 +320,9 @@ export async function generateAudioPreview(text: string, voiceId: string, settin
             properties: audioStream ? Object.keys(audioStream) : 'null'
         });
 
-        return await streamToBase64(audioStream);
+        const stream = await streamToBase64(audioStream)
+
+        return stream;
     } catch (error) {
         console.error('Error generating audio preview:', error);
         throw error;

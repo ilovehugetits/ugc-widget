@@ -7,7 +7,7 @@ import { useAudioUpload } from '@/contexts/audio-upload-context'
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { X } from "lucide-react"
+import { Trash2, X } from "lucide-react"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = ['audio/mp3', 'audio/wav', 'audio/mpeg']
@@ -15,13 +15,14 @@ const ALLOWED_TYPES = ['audio/mp3', 'audio/wav', 'audio/mpeg']
 export function AudioUpload() {
     const [uploadProgress, setUploadProgress] = useState(0)
     const [isUploading, setIsUploading] = useState(false)
-    const { audioUrl, setAudioUrl } = useAudioUpload()
+    const { audioUrl, setAudioUrl, setAudioDuration } = useAudioUpload()
     const { toast } = useToast()
 
     const validateAudioDuration = (file: File): Promise<boolean> => {
         return new Promise((resolve) => {
             const audio = new Audio()
             audio.addEventListener('loadedmetadata', () => {
+                setAudioDuration(audio.duration)
                 resolve(audio.duration <= 60) // 60 seconds max
             })
             audio.src = URL.createObjectURL(file)
@@ -30,10 +31,8 @@ export function AudioUpload() {
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         const file = acceptedFiles[0]
-        
-        if (!file) return
 
-        console.log("file.type",file.type)
+        if (!file) return
 
         if (!ALLOWED_TYPES.includes(file.type)) {
             toast({
@@ -66,7 +65,7 @@ export function AudioUpload() {
         setIsUploading(true)
         try {
             const { uploadUrl, fileUrl } = await generateUploadUrl(file.type)
-            
+
             const xhr = new XMLHttpRequest()
             xhr.upload.addEventListener('progress', (event) => {
                 if (event.lengthComputable) {
@@ -76,12 +75,14 @@ export function AudioUpload() {
             })
 
             xhr.upload.addEventListener('load', () => {
-                setAudioUrl(fileUrl)
-                setIsUploading(false)
-                toast({
-                    title: "Upload complete",
-                    description: "Your audio file has been uploaded successfully"
-                })
+                setTimeout(() => {
+                    setAudioUrl(fileUrl)
+                    setIsUploading(false)
+                    toast({
+                        title: "Upload complete",
+                        description: "Your audio file has been uploaded successfully"
+                    })
+                }, 2500)
             })
 
             xhr.open('PUT', uploadUrl)
@@ -151,22 +152,19 @@ export function AudioUpload() {
             )}
 
             {audioUrl && !isUploading && (
-                <div className="border rounded-lg p-4 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-medium">Uploaded Audio</h3>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={removeAudio}
-                            className="text-red-500 hover:text-red-700"
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
+                <div className="flex flex-row items-center gap-4">
                     <audio controls className="w-full">
                         <source src={audioUrl} type="audio/mpeg" />
                         Your browser does not support the audio element.
                     </audio>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeAudio}
+                        className="text-red-500 hover:text-red-700"
+                    >
+                        <Trash2 className="h-5 w-5" />
+                    </Button>
                 </div>
             )}
         </div>

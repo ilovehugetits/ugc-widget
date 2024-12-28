@@ -56,10 +56,9 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
 
     const { data: videos = [], refetch } = useQuery<Video[]>({
         queryKey: ['videos'],
-        queryFn: getVideos
+        queryFn: getVideos,
+        refetchInterval: 10000
     })
-
-    console.log('Videos data:', videos)
 
     const isValidVideos = (data: unknown): data is Video[] => {
         return Array.isArray(data) && data.every(item =>
