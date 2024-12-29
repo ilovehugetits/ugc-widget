@@ -39,7 +39,7 @@ export async function createUserIfNotExists(params: {
     }
 
     // Find highest video limit from subscriptions
-    let videoLimit = 10 // Default limit
+    let videoLimit = 0 // Default limit
     if (subscriptions.length > 0) {
         const subIds = subscriptions.map(Number).filter(id => !isNaN(id))
         if (subIds.length > 0) {
