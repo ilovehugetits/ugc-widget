@@ -494,33 +494,12 @@ export function CreateForm({ onBackClick }: Props) {
                 </div>
                 {step === 0 && (
                     <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
-                        <div className='flex items-center justify-between mb-4'>
+                        <div className='mb-4'>
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-1">What would you like your avatar to say?</h2>
                                 <p className="text-sm text-gray-600">Write or generate a script to get started</p>
                             </div>
-                            <Button
-                                onClick={() => setIsModalOpen(true)}
-                                variant="outline"
-                                className="transition-all h-8 px-3 cursor-pointer bg-transparent border border-[#64748B] text-[#64748B] rounded hover:text-white hover:bg-[#64748B] text-xs flex items-center gap-2"
-                            >
-                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g clipPath="url(#clip0_14_504)">
-                                        <path d="M14 4.00001C14 2.8954 14.8954 2 16 2C14.8955 2 14 1.10457 14 0C14 1.10454 13.1046 2 12 2C13.1045 2 14 2.89537 14 4.00001Z" fill="currentColor" />
-                                        <path d="M14.5 6C14.5 6.82841 13.8284 7.5 13 7.5C13.8284 7.5 14.5 8.17158 14.5 8.99999C14.5 8.17154 15.1716 7.5 16 7.5C15.1715 7.50003 14.5 6.82845 14.5 6Z" fill="currentColor" />
-                                        <path d="M6.99999 5.99998C6.99999 4.34312 8.34312 2.99999 9.99998 2.99999C8.34312 2.99999 6.99999 1.65686 6.99999 0C6.99999 1.65686 5.65686 2.99999 4 2.99999C5.65686 2.99999 6.99999 4.34315 6.99999 5.99998Z" fill="currentColor" />
-                                        <path d="M11 3L0 14L2 16L13 5L11 3ZM9.29297 6.20704L10.707 4.79299L11.207 5.293L9.79297 6.70704L9.29297 6.20704Z" fill="currentColor" />
-                                    </g>
-                                    <defs>
-                                        <clipPath id="clip0_14_504">
-                                            <rect width="16" height="16" fill="white" />
-                                        </clipPath>
-                                    </defs>
-                                </svg>
-                                Generate With AI
-                            </Button>
                         </div>
-
 
                         <div className="mb-6 relative">
                             <div className='relative'>
@@ -538,17 +517,37 @@ export function CreateForm({ onBackClick }: Props) {
                                     className={`min-h-[220px] resize-none ${errors.script ? 'border-red-500' : ''}`}
                                 />
 
-                                <div className="text-[13px] font-medium text-[#9C9C9C] absolute bottom-0 right-0 m-2 mx-4">
-                                    <span className={`${formData.script.length >= 1000 ? 'text-red-500' : 'text-[#565656]'}`}>
-                                        {formData.script.length}
-                                    </span>/1000
+                                <div className="absolute bottom-0 right-0 m-2 mx-4 flex items-center gap-4">
+                                    <div className="text-[13px] font-medium text-[#9C9C9C]">
+                                        <span className={`${formData.script.length >= 1000 ? 'text-red-500' : 'text-[#565656]'}`}>
+                                            {formData.script.length}
+                                        </span>/1000
+                                    </div>
+                                    <Button
+                                        onClick={() => setIsModalOpen(true)}
+                                        variant="outline"
+                                        className="transition-all h-8 px-3 cursor-pointer bg-transparent border border-[#64748B] text-[#64748B] rounded hover:text-white hover:bg-[#64748B] text-xs flex items-center gap-2"
+                                    >
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <g clipPath="url(#clip0_14_504)">
+                                                <path d="M14 4.00001C14 2.8954 14.8954 2 16 2C14.8955 2 14 1.10457 14 0C14 1.10454 13.1046 2 12 2C13.1045 2 14 2.89537 14 4.00001Z" fill="currentColor" />
+                                                <path d="M14.5 6C14.5 6.82841 13.8284 7.5 13 7.5C13.8284 7.5 14.5 8.17158 14.5 8.99999C14.5 8.17154 15.1716 7.5 16 7.5C15.1715 7.50003 14.5 6.82845 14.5 6Z" fill="currentColor" />
+                                                <path d="M6.99999 5.99998C6.99999 4.34312 8.34312 2.99999 9.99998 2.99999C8.34312 2.99999 6.99999 1.65686 6.99999 0C6.99999 1.65686 5.65686 2.99999 4 2.99999C5.65686 2.99999 6.99999 4.34315 6.99999 5.99998Z" fill="currentColor" />
+                                                <path d="M11 3L0 14L2 16L13 5L11 3ZM9.29297 6.20704L10.707 4.79299L11.207 5.293L9.79297 6.70704L9.29297 6.20704Z" fill="currentColor" />
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_14_504">
+                                                    <rect width="16" height="16" fill="white" />
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                        Generate With AI
+                                    </Button>
                                 </div>
                             </div>
                             {errors.script && (
                                 <p className="text-sm text-red-500 mt-2">{errors.script}</p>
                             )}
-
-
                         </div>
 
                         <div className="bg-blue-50 rounded-lg p-4">
@@ -606,23 +605,6 @@ export function CreateForm({ onBackClick }: Props) {
                                             <div className="text-white line-clamp-2 font-medium text-[14px]">
                                                 {actor.name}
                                             </div>
-                                            <div className="flex gap-2 items-center">
-                                                {actor.lipDubActorId && (
-                                                    <div className="flex">
-                                                        <Tooltip delayDuration={0}>
-                                                            <TooltipTrigger asChild>
-                                                                <div className="flex cursor-pointer text-xs font-medium items-center justify-center px-1.5 py-0.5 rounded bg-yellow-600 text-white">
-                                                                    PRO
-                                                                </div>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent className="mb-4 w-64 p-4 text-sm">
-                                                                <p>Pro actors deliver higher-quality outputs with more refined performances.</p>
-                                                                <p className="mt-2 font-semibold">Note: Processing may take slightly longer.</p>
-                                                            </TooltipContent>
-                                                        </Tooltip>
-                                                    </div>
-                                                )}
-                                            </div>
                                         </div>
                                     ) : (
                                         <>
@@ -631,21 +613,6 @@ export function CreateForm({ onBackClick }: Props) {
                                                     {actor.name}
                                                 </div>
                                             </div>
-                                            {actor.lipDubActorId && (
-                                                <div className="absolute left-0 top-0 p-3">
-                                                    <Tooltip delayDuration={0}>
-                                                        <TooltipTrigger asChild>
-                                                            <div className="flex cursor-pointer text-xs font-medium items-center justify-center px-1.5 py-0.5 rounded bg-yellow-600 text-white">
-                                                                PRO
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent className="mb-4 w-64 p-4 text-sm">
-                                                            <p>Pro actors deliver higher-quality outputs with more refined performances.</p>
-                                                            <p className="mt-2 font-semibold">Note: Processing may take slightly longer.</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </div>
-                                            )}
                                         </>
                                     )}
 

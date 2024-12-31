@@ -76,12 +76,6 @@ export default async function VideosPage(props: Props) {
 
   return (
     <div className="flex gap-2 flex-col max-w-[1440px] mx-auto h-full">
-      <div className="flex flex-col md:flex-row items-center justify-between">
-        <div className="font-semibold text-[1.53rem] text-[#00254d] flex items-center gap-3">
-          AI UGC Video Creator
-        </div>
-      </div>
-
       <VideoTabs
         getVideos={getVideos}
         userId={user.id}
