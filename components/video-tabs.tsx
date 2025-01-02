@@ -48,7 +48,7 @@ export function VideoTabs({ getVideos, userId, videosLeft }: Props) {
 
   return (
     <TabContext.Provider value={{ activeTab, setActiveTab }}>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 h-[87vh] flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 h-[87vh] pt-1 flex flex-col">
         <div className="flex flex-col-reverse md:flex-row gap-y-4 items-center justify-between mb-0">
           <TabsList>
             <TabsTrigger value="videos">All Videos</TabsTrigger>

@@ -2,7 +2,7 @@
 
 import { db } from "@/db"
 import { users, videos } from "@/db/schema"
-import { and, eq } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import { headers } from 'next/headers'
 import OpenAI from "openai"
 import axios from 'axios'
@@ -154,7 +154,7 @@ export async function generateScript(data: {
         };
 
         const basePrompt = stylePrompts[data.style as keyof typeof stylePrompts] || stylePrompts.regular;
-        
+
         const response = await openai.chat.completions.create({
             model: "gpt-4o-mini-2024-07-18",
             messages: [
@@ -180,6 +180,59 @@ export async function generateScript(data: {
     }
 }
 
+export async function getAvailableVideoLimit() {
+    const headersList = await headers()
+    const userId = headersList.get('x-user-external-id')
+
+    if (!userId) {
+        throw new Error('Unauthorized')
+    }
+
+    // EXAMPLE:
+    // const { video_limit: videoLimit, id: dbUserId } = userResult.rows[0];
+
+    // const videoCountResult = await client.query(
+    //     `SELECT COUNT(*) as count 
+	// 		 FROM videos 
+	// 		 WHERE user_id = $1 AND status != 'failed' AND status != 'deleted'`,
+    //     [dbUserId]
+    // );
+
+    // const videoCount = parseInt(videoCountResult.rows[0].count);
+
+    // if (videoCount >= videoLimit) {
+    //     return res.status(400).json({ error: 'Video limit reached' });
+    // }
+
+    const user = await db.query.users.findFirst({
+        where: eq(users.externalId, userId)
+    })
+
+    if (!user) {
+        throw new Error('User not found')
+    }
+
+    const { videoLimit, id: dbUserId } = user;
+
+    const videoCountResult = await db.query.videos.findMany({
+        where: and(
+            eq(videos.userId, dbUserId),
+            or(
+                eq(videos.status, 'completed'),
+                eq(videos.status, 'pending')
+            )
+        )
+    })
+
+    const videoCount = videoCountResult.length;
+
+    if (videoCount >= videoLimit) {
+        return 0;
+    }
+
+    return videoLimit - videoCount;
+}
+
 async function streamToBase64(stream: any): Promise<string> {
     console.log('Stream type:', {
         isReadable: stream instanceof Readable,
@@ -194,29 +247,29 @@ async function streamToBase64(stream: any): Promise<string> {
     if ('reader' in stream) {
         console.log('Handling as Node18UniversalStreamWrapper with existing reader');
         const chunks: Uint8Array[] = [];
-        
+
         try {
             while (true) {
                 const { done, value } = await stream.reader.read();
                 console.log('Read chunk:', done ? 'done' : `${value?.length} bytes`);
-                
+
                 if (done) {
                     break;
                 }
-                
+
                 chunks.push(value);
             }
-            
+
             const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
             console.log('Total length:', totalLength);
             const concatenated = new Uint8Array(totalLength);
-            
+
             let offset = 0;
             for (const chunk of chunks) {
                 concatenated.set(chunk, offset);
                 offset += chunk.length;
             }
-            
+
             return Buffer.from(concatenated).toString('base64');
         } catch (error) {
             console.error('Error reading stream:', error);
@@ -250,29 +303,29 @@ async function streamToBase64(stream: any): Promise<string> {
         console.log('Handling as Web ReadableStream');
         const chunks: Uint8Array[] = [];
         const reader = (stream as ReadableStream).getReader();
-        
+
         try {
             while (true) {
                 const { done, value } = await reader.read();
                 console.log('Read chunk:', done ? 'done' : `${value?.length} bytes`);
-                
+
                 if (done) {
                     break;
                 }
-                
+
                 chunks.push(value);
             }
-            
+
             const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
             console.log('Total length:', totalLength);
             const concatenated = new Uint8Array(totalLength);
-            
+
             let offset = 0;
             for (const chunk of chunks) {
                 concatenated.set(chunk, offset);
                 offset += chunk.length;
             }
-            
+
             return Buffer.from(concatenated).toString('base64');
         } finally {
             reader.releaseLock();
@@ -295,7 +348,7 @@ export async function generateAudioPreview(text: string, voiceId: string, settin
 }) {
     try {
         console.log('Generating audio preview with:', { text: text.substring(0, 50) + '...', voiceId, settings });
-        
+
         const client = new ElevenLabsClient({
             apiKey: process.env.ELEVENLABS_API_KEY
         });

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { FaPlay } from 'react-icons/fa'
 import { useToast } from "@/hooks/use-toast"
 import { actors } from '@/db/schema'
-import { getActors, createVideo, generateScript, generateAudioPreview } from "@/app/actions"
+import { getActors, createVideo, generateScript, generateAudioPreview, getAvailableVideoLimit } from "@/app/actions"
 import {
     Dialog,
     DialogContent,
@@ -33,6 +33,8 @@ import { useAudioUpload } from "@/contexts/audio-upload-context"
 
 // lucide
 import { LucideArrowLeft, LucideArrowRight } from 'lucide-react'
+import { Search, Filter } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 type ActorWithoutRelations = Omit<typeof actors.$inferSelect, 'videos'>
 
 interface Props {
@@ -103,15 +105,37 @@ const SCRIPT_STYLES: ScriptStyle[] = [
 
 export function CreateForm({ onBackClick }: Props) {
     const [step, setStep] = useState<number>(0)
-
     const [activeActor, setActiveActor] = useState<string | null>(null)
     const [selectedActor, setSelectedActor] = useState<string | null>(null)
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [nextButtonLoading, setNextButtonLoading] = useState(false);
+    // Add these state declarations here, before filteredActors
+    const [searchQuery, setSearchQuery] = useState("")
+    const [selectedFilter, setSelectedFilter] = useState<string>("all")
+
     const { toast } = useToast()
     const queryClient = useQueryClient()
     const { setActiveTab } = useTabContext()
 
+    const { data: actors = [] } = useQuery<ActorWithoutRelations[]>({
+        queryKey: ['actors'],
+        queryFn: getActors
+    })
+
+    // Now filteredActors can access searchQuery and selectedFilter
+    const filteredActors = actors.filter(actor => {
+        // First filter by search query
+        const matchesSearch = actor.name.toLowerCase().includes(searchQuery.toLowerCase())
+
+        // Then filter by selected categories
+        const matchesCategory = selectedCategories.length === 0 || (
+            actor.categories && (selectedCategories.some(cat => (actor.categories as unknown as string[]).includes(cat))
+            )
+        )
+
+        return matchesSearch && matchesCategory
+    });
 
     const [formData, setFormData] = useState({
         name: '',
@@ -128,11 +152,6 @@ export function CreateForm({ onBackClick }: Props) {
     const [previewAudio, setPreviewAudio] = useState<string | null>(null);
 
     const { canMakeRequest, incrementRequestCount } = useRateLimit('audio_preview', 20);
-
-    const { data: actors = [] } = useQuery<ActorWithoutRelations[]>({
-        queryKey: ['actors'],
-        queryFn: getActors
-    })
 
     const actorCategories = [...new Set(actors.flatMap(actor => {
         if (typeof actor.categories === 'string') {
@@ -151,22 +170,6 @@ export function CreateForm({ onBackClick }: Props) {
             typeof category === 'string'
         )
         .sort();
-
-    // Filter actors based on selected categories
-    const filteredActors = actors.filter(actor => {
-        if (selectedCategories.length === 0) {
-            return true; // Show all actors if no categories are selected
-        }
-
-        const actorCats = typeof actor.categories === 'string'
-            ? JSON.parse(actor.categories)
-            : actor.categories || [];
-
-        // Check if any selected category matches the actor's categories
-        return selectedCategories.some(category =>
-            actorCats.includes(category)
-        );
-    });
 
     // Create video mutation
     const createMutation = useMutation({
@@ -450,8 +453,21 @@ export function CreateForm({ onBackClick }: Props) {
         return isValid;
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (validateStep(step)) {
+            if (step == 1) {
+                setNextButtonLoading(true);
+                const limit = await getAvailableVideoLimit();
+                setNextButtonLoading(false);
+                if (limit <= 0) {
+                    toast({
+                        variant: "destructive",
+                        title: "You have reached your video limit. Please upgrade your subscription to create more videos."
+                    });
+                    return;
+                }
+            }
+
             setStep(step + 1);
         }
     };
@@ -468,36 +484,142 @@ export function CreateForm({ onBackClick }: Props) {
         setPreviewAudio(null);
     }, [selectedActor])
 
+    // Update the CategoriesDropdown component
+    const CategoriesDropdown = () => {
+        const [isOpen, setIsOpen] = useState(false)
+
+        useEffect(() => {
+            const handleClickOutside = (event: MouseEvent) => {
+                const dropdown = document.getElementById('category-dropdown');
+                if (dropdown && !dropdown.contains(event.target as Node)) {
+                    setIsOpen(false);
+                }
+            };
+
+            if (isOpen) {
+                document.addEventListener('click', handleClickOutside);
+            }
+
+            return () => {
+                document.removeEventListener('click', handleClickOutside);
+            };
+        }, [isOpen]);
+
+        return (
+            <div className="relative">
+                <Button
+                    variant="outline"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="h-full w-full py-4 md:py-3.5 w-11 flex items-center justify-center border-gray-200 hover:bg-gray-50"
+                    title="Filter by category"
+                >
+                    <Filter className="h-4 w-4 text-gray-600" />
+                </Button>
+
+                {isOpen && (
+                    <div
+                        id="category-dropdown"
+                        className="absolute z-10 mt-1 w-[300px] right-0 rounded-lg bg-white shadow-lg border border-gray-200 py-2"
+                    >
+                        <div className="px-3 py-2 border-b border-gray-100">
+                            <div className="text-sm font-medium text-gray-700">Filter by category</div>
+                            {selectedCategories.length > 0 && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                    {selectedCategories.length} selected
+                                </div>
+                            )}
+                        </div>
+                        <div className="max-h-[320px] overflow-auto px-2">
+                            {actorCategories.filter(category => category != "All ").map((category) => (
+                                <div
+                                    key={category}
+                                    className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-md cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent event bubbling
+                                        if (selectedCategories.includes(category)) {
+                                            setSelectedCategories(prev => prev.filter(cat => cat !== category))
+                                        } else {
+                                            setSelectedCategories(prev => [...prev, category])
+                                        }
+                                    }}
+                                >
+                                    <Checkbox
+                                        id={`category-${category}`}
+                                        checked={selectedCategories.includes(category)}
+                                        onCheckedChange={(checked) => {
+                                            if (checked) {
+                                                setSelectedCategories(prev => [...prev, category])
+                                            } else {
+                                                setSelectedCategories(prev =>
+                                                    prev.filter(cat => cat !== category)
+                                                )
+                                            }
+                                        }}
+                                    />
+                                    <label
+                                        htmlFor={`category-${category}`}
+                                        className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                                    >
+                                        {categoryEmojis[category] || ''} {category}
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                        {selectedCategories.length > 0 && (
+                            <div className="border-t mt-2 pt-2 px-2 flex justify-between items-center">
+                                <span className="text-sm text-gray-500 px-3">
+                                    {selectedCategories.length} selected
+                                </span>
+                                <Button
+                                    variant="ghost"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedCategories([]);
+                                    }}
+                                    className="text-sm h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                    Clear all
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
     return (
         <TooltipProvider>
-            <div className='flex flex-col items-center justify-center gap-4 w-full px-4 mx-auto'>
-                <div className='flex items-center justify-center w-full gap-4 mb-2 mt-4 lg:mt-4 lg:px-12'>
-                    <div className={`flex items-center ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200"}`}>1</div>
-                        <span className="ml-3 hidden md:block font-medium text-sm">Script</span>
-                    </div>
-                    <div className={`h-[2px] w-full ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
-                    <div className={`flex items-center ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}>2</div>
-                        <span className="ml-3 hidden md:block font-medium text-sm">Avatar</span>
-                    </div>
-                    <div className={`h-[2px] w-full ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
-                    <div className={`flex items-center ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200"}`}>3</div>
-                        <span className="ml-3 hidden md:block font-medium text-sm">Audio</span>
-                    </div>
-                    <div className={`h-[2px] w-full ${step <= 2 ? "bg-gray-200 text-white" : "bg-blue-600"}`} />
-                    <div className={`flex items-center ${step === 3 ? "text-blue-600" : "text-gray-400"}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 3 ? "bg-blue-600 text-white" : "bg-gray-200"}`}>4</div>
-                        <span className="ml-3 hidden md:block font-medium text-sm">Review</span>
-                    </div>
-                </div>
+            <div className='flex flex-col items-center justify-center gap-4 w-full px-4 lg:px-0 mx-auto'>
                 {step === 0 && (
                     <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
-                        <div className='mb-4'>
+                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-1">What would you like your avatar to say?</h2>
                                 <p className="text-sm text-gray-600">Write or generate a script to get started</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
+                                        <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
+                                        <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
+                                        <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
+                                        <span className={`text-sm font-medium ${step >= 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -562,12 +684,58 @@ export function CreateForm({ onBackClick }: Props) {
                 )}
                 {step === 1 && (
                     <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
-                        <div className="mb-4">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose your avatar</h2>
-                            <p className="text-sm text-gray-600">Select an avatar that best represents your brand</p>
+                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose your avatar</h2>
+                                <p className="text-sm text-gray-600">Select an avatar that best represents your brand</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
+                                        <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
+                                        <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
+                                        <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
+                                        <span className={`text-sm font-medium ${step >= 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 max-h-[35vh] lg:grid-cols-6 sm:max-h-[40vh] lg:max-h-[50vh] overflow-y-auto">
+                        <div className="mb-6 space-y-4">
+                            <div className="flex sm:flex-row gap-4">
+                                <div className="relative flex-1 w-full">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                    <Input
+                                        placeholder="Search avatars..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="pl-9 w-full"
+                                    />
+                                </div>
+                                <div className="w-fit">
+                                    <CategoriesDropdown />
+                                </div>
+                            </div>
+
+                            <div className="text-sm text-gray-600">
+                                Showing {filteredActors.length} {filteredActors.length === 1 ? 'avatar' : 'avatars'}
+                            </div>
+                        </div>
+
+                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 max-h-[45vh] lg:grid-cols-6 sm:max-h-[50vh] lg:max-h-[60vh] overflow-y-auto">
                             {filteredActors.map(actor => (
                                 <div
                                     key={actor.id}
@@ -640,14 +808,38 @@ export function CreateForm({ onBackClick }: Props) {
                 )}
                 {step === 2 && (
                     <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
-
+                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">Configure audio settings</h2>
+                                <p className="text-sm text-gray-600">Adjust the voice settings or upload your own audio</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
+                                        <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
+                                        <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
+                                        <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
+                                        <span className={`text-sm font-medium ${step >= 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <Tabs value={activeInputTab} onValueChange={(value) => setActiveInputTab(value as "script" | "audio")}>
-                            <div className='flex flex-col md:flex-row items-center justify-between'>
-                                <div className="mb-4">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-1">Configure audio settings</h2>
-                                    <p className="text-sm text-gray-600">Adjust the voice settings or upload your own audio</p>
-                                </div>
+                            <div className='flex flex-col md:flex-row items-center'>
                                 <TabsList className="grid grid-cols-2">
                                     <TabsTrigger value="script">AI Voice</TabsTrigger>
                                     <TabsTrigger value="audio">Upload Audio</TabsTrigger>
@@ -812,9 +1004,34 @@ export function CreateForm({ onBackClick }: Props) {
                 )}
                 {step === 3 && (
                     <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
-                        <div className="mb-6">
-                            <h2 className="text-2xl font-bold text-gray-900 mb-1">Review and create</h2>
-                            <p className="text-sm text-gray-600">Review your settings and create your video</p>
+                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">Review and create</h2>
+                                <p className="text-sm text-gray-600">Review your settings and create your video</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
+                                        <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
+                                        <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
+                                        <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
+                                    </div>
+                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
+                                        <span className={`text-sm font-medium ${step === 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex flex-col md:flex-row gap-8">
@@ -916,9 +1133,19 @@ export function CreateForm({ onBackClick }: Props) {
                     {step < 3 && (
                         <Button
                             onClick={handleNext}
+                            disabled={nextButtonLoading}
                             className='flex items-center gap-2 px-4 text-sm bg-[#151924] hover:bg-[#1a1e27]'
                         >
-                            Next <LucideArrowRight size={16} />
+                            {nextButtonLoading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    Loading...
+                                </div>
+                            ) : (
+                                <>
+                                    Next <LucideArrowRight size={16} />
+                                </>
+                            )}
                         </Button>
                     )}
 
