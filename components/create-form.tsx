@@ -636,7 +636,7 @@ export function CreateForm({ onBackClick }: Props) {
                                         setErrors(prev => ({ ...prev, script: undefined })); // Clear error on change
                                     }}
                                     placeholder="Type your script here..."
-                                    className={`min-h-[220px] resize-none ${errors.script ? 'border-red-500' : ''}`}
+                                    className={`min-h-[320px] resize-none ${errors.script ? 'border-red-500' : ''}`}
                                 />
 
                                 <div className="absolute bottom-0 right-0 m-2 mx-4 flex items-center gap-4">
@@ -645,6 +645,9 @@ export function CreateForm({ onBackClick }: Props) {
                                             {formData.script.length}
                                         </span>/1000
                                     </div>
+
+                                </div>
+                                <div className="absolute bottom-0 left-0 m-2 mx-4 flex items-center gap-4">
                                     <Button
                                         onClick={() => setIsModalOpen(true)}
                                         variant="outline"
