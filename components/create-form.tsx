@@ -546,7 +546,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     <Checkbox
                                         id={`category-${category}`}
                                         checked={selectedCategories.includes(category)}
-                                        onCheckedChange={(checked) => {
+                                        onCheckedChange={(checked: boolean) => {
                                             if (checked) {
                                                 setSelectedCategories(prev => [...prev, category])
                                             } else {
@@ -887,7 +887,7 @@ export function CreateForm({ onBackClick }: Props) {
                                                         min={0.1}
                                                         max={1.0}
                                                         step={0.1}
-                                                        onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, stability: value }))}
+                                                        onValueChange={([value]: [number]) => setAudioSettings(prev => ({ ...prev, stability: value }))}
                                                     />
                                                 </div>
 
@@ -913,7 +913,7 @@ export function CreateForm({ onBackClick }: Props) {
                                                         min={0.1}
                                                         max={1.0}
                                                         step={0.1}
-                                                        onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, similarity: value }))}
+                                                        onValueChange={([value]: [number]) => setAudioSettings(prev => ({ ...prev, similarity: value }))}
                                                     />
                                                 </div>
 
@@ -939,7 +939,7 @@ export function CreateForm({ onBackClick }: Props) {
                                                         min={0.1}
                                                         max={1.0}
                                                         step={0.1}
-                                                        onValueChange={([value]) => setAudioSettings(prev => ({ ...prev, style: value }))}
+                                                        onValueChange={([value]: [number]) => setAudioSettings(prev => ({ ...prev, style: value }))}
                                                     />
                                                 </div>
                                             </div>
