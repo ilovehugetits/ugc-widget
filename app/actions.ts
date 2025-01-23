@@ -358,7 +358,7 @@ export async function generateAudioPreview(text: string, voiceId: string, settin
             {
                 text,
                 voice_settings: {
-                    stability: 0.5,
+                    stability: settings.stability,
                     similarity_boost: settings.similarity,
                     style: settings.style,
                 },
