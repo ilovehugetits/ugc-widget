@@ -369,7 +369,7 @@ export function CreateForm({ onBackClick }: Props) {
         const timer = setTimeout(() => {
             setActiveActor(actorName)
             setIsHoverActivated(true)  // Mark that this was activated by hover
-        }, 500)
+        }, 1000)
 
         setHoverTimer(timer)
     }, [])
@@ -738,13 +738,14 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                         </div>
 
-                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 max-h-[45vh] lg:grid-cols-6 sm:max-h-[50vh] lg:max-h-[60vh] overflow-y-auto">
+                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 max-h-[45vh] lg:grid-cols-6 sm:max-h-[55vh] lg:max-h-[68vh] overflow-y-auto">
                             {filteredActors.map(actor => (
                                 <div
                                     key={actor.id}
                                     className={`transition-all overflow-hidden aspect-[5/7] h-max group rounded-[8px] relative flex flex-col ${selectedActor === actor.id ? 'border-[3px] border-[#0069d9]' : ''}`}
                                     onMouseEnter={() => handleActorHover(actor.name)}
                                     onMouseLeave={handleActorHoverEnd}
+                                    onClick={() => setSelectedActor(actor.id)}
                                 >
                                     {activeActor === actor.name ? (
                                         <video
@@ -764,7 +765,11 @@ export function CreateForm({ onBackClick }: Props) {
                                             />
                                             <div
                                                 className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer"
-                                                onClick={() => handlePlayClick(actor.name)}
+                                                onClick={(e) => {
+                                                    e.stopPropagation(); // Prevent triggering parent's onClick
+                                                    handlePlayClick(actor.name);
+                                                    setSelectedActor(actor.id);
+                                                }}
                                             >
                                                 <FaPlay className="text-white text-2xl" />
                                             </div>
@@ -789,7 +794,10 @@ export function CreateForm({ onBackClick }: Props) {
 
                                     <div
                                         className="absolute right-3 top-2.5 text-white cursor-pointer transition-all"
-                                        onClick={() => setSelectedActor(actor.id)}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // Prevent triggering parent's onClick
+                                            setSelectedActor(actor.id);
+                                        }}
                                     >
                                         {selectedActor === actor.id ? (
                                             <svg className="shadow-xl" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
