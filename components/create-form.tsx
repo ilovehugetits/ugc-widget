@@ -145,10 +145,11 @@ export function CreateForm({ onBackClick }: Props) {
     })
 
     const [audioSettings, setAudioSettings] = useState({
-        stability: 0.1,
-        similarity: 0.3,
-        style: 0.2
+        stability: 0.5,
+        similarity: 0.5,
+        style: 0.1
     });
+
     const [previewAudio, setPreviewAudio] = useState<string | null>(null);
 
     const { canMakeRequest, incrementRequestCount } = useRateLimit('audio_preview', 20);
