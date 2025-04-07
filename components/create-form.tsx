@@ -25,13 +25,11 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
 import { Slider } from "@/components/ui/slider";
-import { useRateLimit } from "@/hooks/use-rate-limit"
 import { useTabContext } from './video-tabs'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AudioUpload } from "./audio-upload"
 import { useAudioUpload } from "@/contexts/audio-upload-context"
 
-// lucide
 import { LucideArrowLeft, LucideArrowRight } from 'lucide-react'
 import { Search, Filter } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -110,9 +108,7 @@ export function CreateForm({ onBackClick }: Props) {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [nextButtonLoading, setNextButtonLoading] = useState(false);
-    // Add these state declarations here, before filteredActors
     const [searchQuery, setSearchQuery] = useState("")
-    const [selectedFilter, setSelectedFilter] = useState<string>("all")
 
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -123,12 +119,9 @@ export function CreateForm({ onBackClick }: Props) {
         queryFn: getActors
     })
 
-    // Now filteredActors can access searchQuery and selectedFilter
     const filteredActors = actors.filter(actor => {
-        // First filter by search query
         const matchesSearch = actor.name.toLowerCase().includes(searchQuery.toLowerCase())
 
-        // Then filter by selected categories
         const matchesCategory = selectedCategories.length === 0 || (
             actor.categories && (selectedCategories.some(cat => (actor.categories as unknown as string[]).includes(cat))
             )
@@ -151,8 +144,6 @@ export function CreateForm({ onBackClick }: Props) {
     });
 
     const [previewAudio, setPreviewAudio] = useState<string | null>(null);
-
-    const { canMakeRequest, incrementRequestCount } = useRateLimit('audio_preview', 20);
 
     const actorCategories = [...new Set(actors.flatMap(actor => {
         if (typeof actor.categories === 'string') {
@@ -255,7 +246,6 @@ export function CreateForm({ onBackClick }: Props) {
         onSuccess: (audioStream) => {
             const audioUrl = `data:audio/mpeg;base64,${audioStream}`;
             setPreviewAudio(audioUrl);
-            incrementRequestCount();
             toast({ title: "Audio preview generated successfully" });
         },
         onError: (error) => {
@@ -282,15 +272,6 @@ export function CreateForm({ onBackClick }: Props) {
                 variant: "destructive",
                 title: "Script is required",
                 description: "Please enter a script before generating preview"
-            });
-            return;
-        }
-
-        if (!canMakeRequest) {
-            toast({
-                variant: "destructive",
-                title: "Rate limit exceeded",
-                description: "You can only generate 10 previews per hour"
             });
             return;
         }
@@ -334,6 +315,19 @@ export function CreateForm({ onBackClick }: Props) {
             return
         }
 
+        const selectedActorData = actors.find(a => a.id === selectedActor);
+        const isCaptionsProvider = selectedActorData && selectedActorData.provider === "captions";
+
+        // For captions provider, we only need script and actorId
+        if (isCaptionsProvider) {
+            createMutation.mutate({
+                ...formData,
+                actorId: selectedActor
+            });
+            return;
+        }
+
+        // Regular flow for other providers
         if (activeInputTab === "script" && !formData.script) {
             toast({
                 variant: "destructive",
@@ -414,6 +408,8 @@ export function CreateForm({ onBackClick }: Props) {
     const validateStep = (currentStep: number): boolean => {
         setErrors({}); // Clear previous errors
         let isValid = true;
+        const selectedActorData = actors.find(a => a.id === selectedActor);
+        const isCaptionsProvider = selectedActorData && selectedActorData.provider === "captions";
 
         switch (currentStep) {
             case 0: // Script step
@@ -434,12 +430,15 @@ export function CreateForm({ onBackClick }: Props) {
                 break;
 
             case 2: // Audio step
-                if (activeInputTab === "script" && !previewAudio) {
-                    setErrors(prev => ({ ...prev, audio: "Please generate an audio preview" }));
-                    isValid = false;
-                } else if (activeInputTab === "audio" && !audioUrl) {
-                    setErrors(prev => ({ ...prev, audio: "Please upload an audio file" }));
-                    isValid = false;
+                // Skip validation for captions provider as they'll never reach this step
+                if (!isCaptionsProvider) {
+                    if (activeInputTab === "script" && !previewAudio) {
+                        setErrors(prev => ({ ...prev, audio: "Please generate an audio preview" }));
+                        isValid = false;
+                    } else if (activeInputTab === "audio" && !audioUrl) {
+                        setErrors(prev => ({ ...prev, audio: "Please upload an audio file" }));
+                        isValid = false;
+                    }
                 }
                 break;
 
@@ -460,11 +459,20 @@ export function CreateForm({ onBackClick }: Props) {
                 setNextButtonLoading(true);
                 const limit = await getAvailableVideoLimit();
                 setNextButtonLoading(false);
+                console.log('limit', limit)
+
                 if (limit <= 0) {
                     toast({
                         variant: "destructive",
                         title: "You have reached your video limit. Please upgrade your subscription to create more videos."
                     });
+                    return;
+                }
+                
+                // Skip audio step if actor provider is "captions"
+                const selectedActorData = actors.find(a => a.id === selectedActor);
+                if (selectedActorData && selectedActorData.provider === "captions") {
+                    setStep(step + 2); // Skip to review step
                     return;
                 }
             }
@@ -605,17 +613,17 @@ export function CreateForm({ onBackClick }: Props) {
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
                                         <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
                                         <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
                                         <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
                                         <span className={`text-sm font-medium ${step >= 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
@@ -694,22 +702,22 @@ export function CreateForm({ onBackClick }: Props) {
                                 <p className="text-sm text-gray-600">Select an avatar that best represents your brand</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 flex-wrap">
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
                                         <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] hidden md:block w-4 md:w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
                                         <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
                                         <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
                                         <span className={`text-sm font-medium ${step >= 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
@@ -739,7 +747,7 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                         </div>
 
-                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 max-h-[45vh] lg:grid-cols-6 sm:max-h-[55vh] lg:max-h-[68vh] overflow-y-auto">
+                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 max-h-[45vh] lg:grid-cols-5 xl:grid-cols-6 sm:max-h-[55vh] lg:max-h-[68vh] overflow-y-auto">
                             {filteredActors.map(actor => (
                                 <div
                                     key={actor.id}
@@ -751,7 +759,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     {activeActor === actor.name ? (
                                         <video
                                             className="w-full h-full object-cover"
-                                            src={actor.url}
+                                            src={actor.previewVideo}
                                             autoPlay
                                             controls
                                         />
@@ -831,17 +839,17 @@ export function CreateForm({ onBackClick }: Props) {
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
                                         <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
                                         <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
                                         <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
                                         <span className={`text-sm font-medium ${step >= 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
@@ -857,8 +865,6 @@ export function CreateForm({ onBackClick }: Props) {
                                     <TabsTrigger value="audio">Upload Audio</TabsTrigger>
                                 </TabsList>
                             </div>
-
-
 
                             <TabsContent value="script">
                                 <div className="flex flex-col gap-1 relative">
@@ -1027,17 +1033,22 @@ export function CreateForm({ onBackClick }: Props) {
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 0 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>1</div>
                                         <span className={`text-sm font-medium ${step >= 0 ? "text-blue-600" : "text-gray-400"}`}>Script</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 1 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>2</div>
                                         <span className={`text-sm font-medium ${step >= 1 ? "text-blue-600" : "text-gray-400"}`}>Avatar</span>
                                     </div>
-                                    <div className={`h-[2px] w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
-                                        <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
-                                    </div>
-                                    <div className={`h-[2px] w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                    {/* Only show Audio step for non-captions providers */}
+                                    {!(selectedActor && actors.find(a => a.id === selectedActor)?.provider === "captions") && (
+                                        <>
+                                            <div className={`h-[2px] w-4 md:w-8 ${step >= 2 ? "bg-blue-600" : "bg-gray-200"}`} />
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 2 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>3</div>
+                                                <span className={`text-sm font-medium ${step >= 2 ? "text-blue-600" : "text-gray-400"}`}>Audio</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    <div className={`h-[2px] w-4 md:w-8 ${step >= 3 ? "bg-blue-600" : "bg-gray-200"}`} />
                                     <div className="flex items-center gap-2">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === 3 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-400"}`}>4</div>
                                         <span className={`text-sm font-medium ${step === 3 ? "text-blue-600" : "text-gray-400"}`}>Review</span>
@@ -1083,51 +1094,53 @@ export function CreateForm({ onBackClick }: Props) {
                                     )}
                                 </div>
 
-                                {activeInputTab === "script" && (
-                                    <div>
-                                        <label className="text-sm font-medium text-gray-700">Script</label>
-                                        <div className="mt-1 p-3 bg-gray-50 rounded-lg">
-                                            <p className="text-sm text-gray-600 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
-                                                {formData.script}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex flex-col sm:flex-row gap-4">
-                                    <div className='min-w-[100px]'>
-                                        <label className="text-sm font-medium text-gray-700">Input Type</label>
-                                        <div className="mt-1 text-sm text-gray-600">
-                                            {activeInputTab === "script" ? "AI Voice" : "Custom Audio"}
-                                        </div>
-                                    </div>
-
-                                    <div className='min-w-[150px]'>
-                                        <label className="text-sm font-medium text-gray-700">Estimated Duration</label>
-                                        <div className="mt-1 text-sm text-gray-600">
-                                            {activeInputTab === "script"
-                                                ? `~${Math.ceil((formData.script.split(' ').length / 150) * 60)} seconds`
-                                                :
-                                                // the length of the audio
-                                                audioDuration ? `${Math.ceil(audioDuration)} seconds` : "0 seconds"
-                                            }
-                                        </div>
+                                {/* Always show script */}
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Script</label>
+                                    <div className="mt-1 p-3 bg-gray-50 rounded-lg">
+                                        <p className="text-sm text-gray-600 whitespace-pre-wrap max-h-[100px] overflow-y-auto">
+                                            {formData.script}
+                                        </p>
                                     </div>
                                 </div>
-                                {activeInputTab === "script" && (
-                                    <div className='w-1/2'>
-                                        <label className="text-sm font-medium text-gray-700">Audio Preview</label>
-                                        <div className="mt-1">
-                                            {previewAudio && (
-                                                <audio controls className="w-full">
-                                                    <source src={previewAudio} type="audio/mpeg" />
-                                                </audio>
-                                            )}
+
+                                {/* Only show audio related items for non-captions providers */}
+                                {!(selectedActor && actors.find(a => a.id === selectedActor)?.provider === "captions") && (
+                                    <>
+                                        <div className="flex flex-col sm:flex-row gap-4">
+                                            <div className='min-w-[100px]'>
+                                                <label className="text-sm font-medium text-gray-700">Input Type</label>
+                                                <div className="mt-1 text-sm text-gray-600">
+                                                    {activeInputTab === "script" ? "AI Voice" : "Custom Audio"}
+                                                </div>
+                                            </div>
+
+                                            <div className='min-w-[150px]'>
+                                                <label className="text-sm font-medium text-gray-700">Estimated Duration</label>
+                                                <div className="mt-1 text-sm text-gray-600">
+                                                    {activeInputTab === "script"
+                                                        ? `~${Math.ceil((formData.script.split(' ').length / 150) * 60)} seconds`
+                                                        :
+                                                        // the length of the audio
+                                                        audioDuration ? `${Math.ceil(audioDuration)} seconds` : "0 seconds"
+                                                    }
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                        {activeInputTab === "script" && (
+                                            <div className='w-1/2'>
+                                                <label className="text-sm font-medium text-gray-700">Audio Preview</label>
+                                                <div className="mt-1">
+                                                    {previewAudio && (
+                                                        <audio controls className="w-full">
+                                                            <source src={previewAudio} type="audio/mpeg" />
+                                                        </audio>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
-
-
                             </div>
                         </div>
                     </div>

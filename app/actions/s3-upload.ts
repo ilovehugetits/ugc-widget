@@ -4,13 +4,6 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
-console.log('Environment Variables Check:', {
-    SPACES_ENDPOINT: process.env.SPACES_ENDPOINT ? 'Set' : 'Missing',
-    SPACES_KEY: process.env.SPACES_KEY ? 'Set' : 'Missing',
-    SPACES_SECRET: process.env.SPACES_SECRET ? 'Set' : 'Missing'
-});
-
-console.log('Initializing S3 client with endpoint:', process.env.SPACES_ENDPOINT);
 
 if (!process.env.SPACES_KEY || !process.env.SPACES_SECRET || !process.env.SPACES_ENDPOINT) {
     throw new Error('Missing required environment variables for S3 client');
@@ -24,8 +17,6 @@ const s3Client = new S3Client({
         secretAccessKey: process.env.SPACES_SECRET
     }
 });
-
-console.log('S3 client initialized');
 
 export async function generateUploadUrl(fileType: string) {
     console.log('generateUploadUrl called with fileType:', fileType);

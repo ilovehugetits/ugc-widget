@@ -10,14 +10,6 @@ import {
 
 import { relations } from 'drizzle-orm'
 
-// export const videoStatusEnum = pgEnum('video_status', [
-//     'queued',
-//     'processing',
-//     'completed',
-//     'failed',
-//     'deleted'
-// ])
-
 export const subscriptionLimits = pgTable('subscription_limits', {
     subscriptionId: integer('subscription_id').primaryKey(),  // External subscription ID
     maxVideos: integer('max_videos').notNull()
@@ -27,55 +19,50 @@ export const users = pgTable('users', {
     id: uuid('id').defaultRandom().primaryKey(),
     externalId: varchar('external_id', { length: 255 }).notNull().unique(), // Parent system user ID
     videoLimit: integer('video_limit').notNull().default(10),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-    lastActivityAt: timestamp('last_activity_at'),
     email: varchar('email', { length: 255 }),
-    name: varchar('name', { length: 255 })
+    name: varchar('name', { length: 255 }),
+    membershipStart: timestamp('membership_start'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull()
 })
 
 export const actors = pgTable('actors', {
     id: uuid('id').defaultRandom().primaryKey(),
     name: varchar('name', { length: 255 }).notNull(),
-    url: text('url').notNull(), // Preview video URL
-    voiceId: varchar('voice_id', { length: 255 }).notNull(), // ElevenLabs voice ID
-    originalUrl: text('original_url').notNull(), // Original source video URL
+    previewVideo: text('preview_video').notNull(),
+    sourceVideo: text('source_video').notNull(),
     thumbnail: text('thumbnail').notNull(),
     categories: text('categories').array().notNull().default([]),
-    status: varchar('status', { length: 20 }).notNull().default('draft'),
+    status: varchar('status', { length: 20 }).notNull().default('draft'), // draft, published, deleted
     displayOrder: integer('display_order').notNull().default(0),
-    lipDubActorId: integer('lipdub_actor_id'), // For PRO quality videos
+    voiceId: varchar('voice_id', { length: 255 }),
+    actorId: varchar('actor_id', { length: 255 }),
+    provider: varchar('provider', { length: 20 }).notNull().default('lipdub'), // lipdub, captions
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull()
 })
 
 export const videos = pgTable('videos', {
     id: uuid('id').defaultRandom().primaryKey(),
-    jobId: varchar('job_id', { length: 255 }).notNull().unique(), // External job ID for video processing
+    jobId: varchar('job_id', { length: 255 }).notNull().unique(),
     name: varchar('name', { length: 255 }).notNull(),
     status: varchar('status', { length: 20 }).notNull().default('queued'),
-    originalUrl: text('original_url'), // Original processed video URL
-    cdnUrl: text('cdn_url'), // CDN URL after upload to DigitalOcean Spaces
+    originalUrl: text('original_url'),
+    videoUrl: text('video_url'),
     thumbnailUrl: text('thumbnail_url'),
-    script: text('script').notNull(), // Video script content
+    script: text('script').notNull(),
     actorId: uuid('actor_id').notNull(),
     userId: uuid('user_id').notNull().references(() => users.id),
-    processingService: varchar('processing_service', { length: 50 }), // 'synclabs' or 'lipdub'
-    processingMetadata: jsonb('processing_metadata').$type<{
-        syncId?: string;
-        lipDubGenerateId?: number;
-        audioId?: string;
-        errorMessage?: string;
-    }>(),
+    provider: varchar('provider', { length: 50 }), // 'lipdub' or 'captions'
+    completedAt: timestamp('completed_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().notNull(),
-    completedAt: timestamp('completed_at')
+    updatedAt: timestamp('updated_at').defaultNow().notNull()   
 })
 
 export const backofficeUsers = pgTable('backoffice_users', {
     id: uuid('id').defaultRandom().primaryKey(),
     email: varchar('email', { length: 255 }).notNull().unique(),
-    password: varchar('password', { length: 255 }).notNull(), // Hashed password
+    password: varchar('password', { length: 255 }).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     lastLoginAt: timestamp('last_login_at')

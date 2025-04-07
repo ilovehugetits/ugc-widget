@@ -2,7 +2,7 @@ import { VideoTabs } from "@/components/video-tabs"
 import { getAuthParams, createUserIfNotExists } from "@/lib/auth"
 import { db } from "@/db"
 import { users, videos } from "@/db/schema"
-import { eq, and, not } from "drizzle-orm"
+import { eq, and, not, gte } from "drizzle-orm"
 import { Video } from "@/components/video-grid"
 
 type Props = {
@@ -15,7 +15,7 @@ async function getVideos(userId: string) {
   try {
     const userVideos = await db.select({
       id: videos.id,
-      cdnUrl: videos.cdnUrl,
+      videoUrl: videos.videoUrl,
       thumbnailUrl: videos.thumbnailUrl,
       name: videos.name,
       createdAt: videos.createdAt,
@@ -47,13 +47,11 @@ export default async function VideosPage(props: Props) {
     return null
   }
 
-  // Get user info
   let user = await db.query.users.findFirst({
     where: eq(users.externalId, externalId)
   })
 
   if (!user) {
-    // Create user if not exists
     user = await createUserIfNotExists({
       externalId,
       name,
@@ -67,7 +65,7 @@ export default async function VideosPage(props: Props) {
     .where(
       and(
         eq(videos.userId, user.id),
-        not(eq(videos.status, 'deleted'))
+        gte(videos.createdAt, user.membershipStart || new Date())
       )
     )
     .execute()

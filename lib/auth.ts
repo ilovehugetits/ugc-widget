@@ -1,6 +1,6 @@
 import { db } from '@/db'
 import { users, subscriptionLimits } from '@/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { createHash } from './crypto'
 
 type SearchParamsType = { [key: string]: string | string[] | undefined }
@@ -27,9 +27,10 @@ export async function createUserIfNotExists(params: {
     email?: string,
     name?: string
 }) {
-    const { externalId, subscriptions = [], email, name } = params
+    const { externalId, subscriptions: _userSubscriptions = [], email, name } = params
 
-    // Check if user exists
+    const userSubscriptions = JSON.parse(_userSubscriptions[0]);
+
     const existingUser = await db.query.users.findFirst({
         where: eq(users.externalId, externalId)
     })
@@ -38,28 +39,25 @@ export async function createUserIfNotExists(params: {
         return existingUser
     }
 
-    // Find highest video limit from subscriptions
-    let videoLimit = 0 // Default limit
-    if (subscriptions.length > 0) {
-        const subIds = subscriptions.map(Number).filter(id => !isNaN(id))
-        if (subIds.length > 0) {
-            const limits = await db.select()
-                .from(subscriptionLimits)
-                .where(eq(subscriptionLimits.subscriptionId, subIds[0]))
+    let videoLimit = 0
 
-            if (limits.length > 0) {
-                videoLimit = Math.max(...limits.map(l => l.maxVideos))
-            }
+    if (userSubscriptions.length > 0) {
+        const subIds = userSubscriptions.map(Number).filter((id: number) => !isNaN(id))
+        const subscriptions = await db.select()
+            .from(subscriptionLimits)
+            .where(inArray(subscriptionLimits.subscriptionId, subIds))
+
+        if (subscriptions.length > 0) {
+            videoLimit = Math.max(...subscriptions.map(s => s.maxVideos))
         }
     }
 
-    // Create new user
     const [newUser] = await db.insert(users).values({
         externalId,
         videoLimit,
         email,
         name,
-        lastActivityAt: new Date()
+        membershipStart: new Date()
     }).returning()
 
     return newUser
@@ -72,7 +70,6 @@ export async function validateAuth(params: SearchParamsType): Promise<boolean> {
         return false
     }
 
-    // Hash doğrulaması yap
     const secretKey = process.env.AUTH_SECRET_KEY!
     const expectedHash = await createHash(user_id as string, secretKey)
     

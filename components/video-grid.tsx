@@ -33,7 +33,7 @@ import {
 
 export interface Video {
     id: string
-    cdnUrl: string
+    videoUrl: string
     thumbnailUrl: string
     name: string
     createdAt: Date
@@ -59,16 +59,6 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
         queryFn: getVideos,
         refetchInterval: 10000
     })
-
-    const isValidVideos = (data: unknown): data is Video[] => {
-        return Array.isArray(data) && data.every(item =>
-            typeof item === 'object' &&
-            item !== null &&
-            'status' in item
-        )
-    }
-
-    const filteredVideos = isValidVideos(videos) ? videos.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) : []
 
     const deleteMutation = useMutation({
         mutationFn: async (videoId: string) => {
@@ -132,7 +122,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
         }
     }
 
-    if (filteredVideos.length === 0) {
+    if (videos.length === 0) {
         return (
             <div className="gap-3 w-full grid lg:grid-cols-5 md:grid-cols-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
                 <div
@@ -155,13 +145,13 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
     return (
         <>
             <div className="gap-3 w-full grid lg:grid-cols-5 md:grid-cols-4 grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
-                {filteredVideos.reverse().map(video => (
+                {videos.reverse().map(video => (
                     <div key={video.id} className="group overflow-hidden rounded-xl relative">
                         <div className="aspect-[9/16] relative">
                             {activeVideo === video.id ? (
                                 <video
                                     className="aspect-[4/6] w-full h-full rounded-xl"
-                                    src={video.cdnUrl.includes("https://") ? video.cdnUrl : "https://" + video.cdnUrl}
+                                    src={video.videoUrl.includes("https://") ? video.videoUrl : "https://" + video.videoUrl}
                                     autoPlay
                                     controls
                                 />
@@ -210,7 +200,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                     <DropdownMenuContent align="end" className="w-40">
                                         {video.status === 'completed' && (
                                             <DropdownMenuItem
-                                                onClick={() => handleDownloadClick(video.cdnUrl, video.id)}
+                                                onClick={() => handleDownloadClick(video.videoUrl, video.id)}
                                                 className="cursor-pointer text-sm"
                                             >
                                                 <Download className="h-4 w-4 mr-1.5" />

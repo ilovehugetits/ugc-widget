@@ -3,7 +3,6 @@ export async function createHash(message: string, secretKey: string): Promise<st
     const messageBuffer = encoder.encode(message);
     const secretKeyBuffer = encoder.encode(secretKey);
 
-    // Secret key'den CryptoKey objesi oluşturma
     const key = await crypto.subtle.importKey(
         'raw',
         secretKeyBuffer,

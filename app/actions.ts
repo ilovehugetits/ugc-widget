@@ -2,7 +2,7 @@
 
 import { db } from "@/db"
 import { users, videos } from "@/db/schema"
-import { and, eq, or } from "drizzle-orm"
+import { and, eq, gte, or } from "drizzle-orm"
 import { headers } from 'next/headers'
 import OpenAI from "openai"
 import axios from 'axios'
@@ -65,7 +65,7 @@ export async function getActors() {
     try {
         const actorsList = await db.query.actors.findMany({
             orderBy: (actors, { asc }) => [asc(actors.displayOrder)],
-            where: (actors, { eq }) => eq(actors.status, 'completed')
+            where: (actors, { eq }) => eq(actors.status, 'published')
         })
 
         return actorsList
@@ -188,22 +188,6 @@ export async function getAvailableVideoLimit() {
         throw new Error('Unauthorized')
     }
 
-    // EXAMPLE:
-    // const { video_limit: videoLimit, id: dbUserId } = userResult.rows[0];
-
-    // const videoCountResult = await client.query(
-    //     `SELECT COUNT(*) as count 
-	// 		 FROM videos 
-	// 		 WHERE user_id = $1 AND status != 'failed' AND status != 'deleted'`,
-    //     [dbUserId]
-    // );
-
-    // const videoCount = parseInt(videoCountResult.rows[0].count);
-
-    // if (videoCount >= videoLimit) {
-    //     return res.status(400).json({ error: 'Video limit reached' });
-    // }
-
     const user = await db.query.users.findFirst({
         where: eq(users.externalId, userId)
     })
@@ -212,17 +196,16 @@ export async function getAvailableVideoLimit() {
         throw new Error('User not found')
     }
 
-    const { videoLimit, id: dbUserId } = user;
+    const { videoLimit, id: dbUserId, membershipStart } = user;
 
     const videoCountResult = await db.query.videos.findMany({
         where: and(
             eq(videos.userId, dbUserId),
-            or(
-                eq(videos.status, 'completed'),
-                eq(videos.status, 'pending')
-            )
+            gte(videos.createdAt, membershipStart || new Date())
         )
     })
+
+    console.log('videoCountResult', videoCountResult)
 
     const videoCount = videoCountResult.length;
 
@@ -380,4 +363,4 @@ export async function generateAudioPreview(text: string, voiceId: string, settin
         console.error('Error generating audio preview:', error);
         throw error;
     }
-} 
+}
