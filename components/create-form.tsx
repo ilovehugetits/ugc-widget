@@ -651,7 +651,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     className={`min-h-[320px] resize-none ${errors.script ? 'border-red-500' : ''}`}
                                 />
 
-                                <div className="absolute bottom-0 right-0 m-2 mx-4 flex items-center gap-4">
+                                <div className="absolute bottom-10 right-0 m-2 mx-4 flex items-center gap-4">
                                     <div className="text-[13px] font-medium text-[#9C9C9C]">
                                         <span className={`${formData.script.length >= 1000 ? 'text-red-500' : 'text-[#565656]'}`}>
                                             {formData.script.length}
@@ -659,7 +659,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     </div>
 
                                 </div>
-                                <div className="absolute bottom-0 left-0 m-2 mx-4 flex items-center gap-4">
+                                <div className="mt-2 flex items-center justify-end gap-4">
                                     <Button
                                         onClick={() => setIsModalOpen(true)}
                                         variant="outline"
