@@ -2,6 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { FaPlay } from 'react-icons/fa'
+
+import { BsQuestionCircleFill as FaQuestionCircle } from "react-icons/bs";
+
+import { MdOutlineCheck } from "react-icons/md";
+
 import { useToast } from "@/hooks/use-toast"
 import { actors } from '@/db/schema'
 import { getActors, createVideo, generateScript, generateAudioPreview, getAvailableVideoLimit } from "@/app/actions"
@@ -35,6 +40,7 @@ import { useAudioUpload } from "@/contexts/audio-upload-context"
 import { LucideArrowLeft, LucideArrowRight } from 'lucide-react'
 import { Search, Filter } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import Link from 'next/link';
 type ActorWithoutRelations = Omit<typeof actors.$inferSelect, 'videos'>
 
 interface Props {
@@ -110,9 +116,7 @@ export function CreateForm({ onBackClick }: Props) {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [nextButtonLoading, setNextButtonLoading] = useState(false);
-    // Add these state declarations here, before filteredActors
-    const [searchQuery, setSearchQuery] = useState("")
-    const [selectedFilter, setSelectedFilter] = useState<string>("all")
+    const [searchQuery, setSearchQuery] = useState("");
 
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -122,6 +126,8 @@ export function CreateForm({ onBackClick }: Props) {
         queryKey: ['actors'],
         queryFn: getActors
     })
+
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
     // Now filteredActors can access searchQuery and selectedFilter
     const filteredActors = actors.filter(actor => {
@@ -454,6 +460,10 @@ export function CreateForm({ onBackClick }: Props) {
         return isValid;
     };
 
+    const togglePricingModal = () => {
+        setIsPricingModalOpen(true);
+    }
+
     const handleNext = async () => {
         if (validateStep(step)) {
             if (step == 1) {
@@ -461,10 +471,11 @@ export function CreateForm({ onBackClick }: Props) {
                 const limit = await getAvailableVideoLimit();
                 setNextButtonLoading(false);
                 if (limit <= 0) {
-                    toast({
-                        variant: "destructive",
-                        title: "You have reached your video limit. Please upgrade your subscription to create more videos."
-                    });
+                    togglePricingModal();
+                    // toast({
+                    //     variant: "destructive",
+                    //     title: "You have reached your video limit. Please upgrade your subscription to create more videos."
+                    // });
                     return;
                 }
             }
@@ -1279,6 +1290,128 @@ export function CreateForm({ onBackClick }: Props) {
                                     </defs>
                                 </svg>
                                 {generateScriptMutation.isPending ? 'Generating...' : 'Generate AI Script'}
+                            </Button>
+                        </DialogFooter>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isPricingModalOpen} onOpenChange={setIsPricingModalOpen}>
+                <DialogContent className="p-0 !rounded-[16px] max-w-6xl">
+                    <DialogHeader className="border-b border-[#E2E8F0] p-6 pb-5">
+                        <DialogTitle className="flex items-center gap-3">
+                            You need to choose a plan to continue
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="p-6">
+                        <div className="flex flex-col md:flex-row gap-6 justify-center items-stretch mb-8">
+                            {/* Lite Plan */}
+                            <div className="flex-1 bg-white rounded-2xl shadow-sm border-2 border-[#E2E8F0] hover:border-[#0B529C] transition-all duration-300 hover:translate-y-[-10px] flex flex-col p-6 min-w-[260px] max-w-[340px]">
+                                <div className="text-lg font-semibold mb-2">Lite</div>
+                                <div className="flex items-end mb-2">
+                                    <span className="text-[48px] font-[800] text-[#1a1f36]">$47</span>
+                                    <span className="text-base text-gray-500 mb-3.5 font-medium">/month</span>
+                                </div>
+                                <div className="text-gray-500 text-sm mb-4">Start creating AI-powered video ads with basic features</div>
+                                <div className="font-semibold text-[#0A529C] text-sm mb-3 border-b border-[#e5e7eb] pb-1.5">Instant AI Video Creator</div>
+                                <ul className="mb-6 space-y-2 text-sm">
+                                    <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>3 Videos Per Month</li>
+                                    <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Realistic Actors</li>
+                                    <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Available In 29 Languages</li>
+                                    <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Export Without Watermark</li>
+                                    <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Script Generation</li>
+                                </ul>
+                                <Link href="https://clients.bandsoffads.com/order/15KPYD/portal">
+                                    <Button className="mt-auto w-full rounded-md bg-[#0A529C] hover:bg-[#084380]">Get Started</Button>
+                                </Link>
+                            </div>
+                            {/* Growth Plan */}
+                            <div className="flex-1 bg-white rounded-2xl shadow-sm border-2 border-[#E2E8F0] hover:border-[#0B529C] transition-all duration-300 hover:translate-y-[-10px] flex flex-col p-6 min-w-[260px] max-w-[340px] relative scale-105 z-10">
+                                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#0B529C] text-white text-xs font-semibold px-4 py-1 rounded-full shadow">Most Popular</div>
+                                <div className="text-lg font-semibold mb-2">Growth</div>
+                                <div className="flex items-end mb-2">
+                                    <span className="text-[48px] font-[800] text-[#1a1f36]">$67</span>
+                                    <span className="text-base text-gray-500 mb-3.5 font-medium">/month</span>
+                                </div>
+                                <div className="text-gray-500 text-sm mb-4">The full solution combining our AI video creation with BandsOffAds VIP benefits</div>
+                                <div className="font-semibold text-[#0A529C] mb-3 text-sm font-medium border-b border-[#e5e7eb] pb-1.5 ">Instant AI Video Creator</div>
+                                <ul className="mb-4 space-y-2 text-sm">
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>10 Videos Per Month</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Realistic Actors</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Available In 29 Languages</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Export Without Watermark</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Script Generation</li>
+                                </ul>
+                                <div className="font-semibold text-[#0A529C] text-sm pb-1.5 mb-4 border-b border-[#e5e7eb] flex items-center gap-1">BandsOffAds VIP Benefits
+                                    <span className="ml-1 cursor-pointer" title="Exclusive benefits for Growth & Elite plans.">
+                                        <Tooltip delayDuration={0}>
+                                            <TooltipTrigger asChild>
+                                                <FaQuestionCircle />
+                                            </TooltipTrigger>
+                                            <TooltipContent className='w-56 border-none shadow-none rounded-2xl bg-[#1a1f36] text-white p-3 px-4'>
+                                                <p className='text-sm font-medium'>BandsOffAds VIP Benefits apply to all the done for you ad packages under the DFY tab on the left hand side as well as a few other bonuses.</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </span>
+                                </div>
+                                <ul className="mb-6 space-y-2 text-sm">
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>50% OFF DFY Videos</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>24 Hour Delivery + Revisions</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Product Research Vault</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Description Generator</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Adcopy Wizard</li>
+                                </ul>
+                                <Link href="https://clients.bandsoffads.com/order/LD1RED/portal">
+                                    <Button className="mt-auto w-full rounded-md bg-[#0A529C] hover:bg-[#084380]">Get Started</Button>
+                                </Link>
+                            </div>
+                            {/* Elite Plan */}
+                            <div className="flex-1 bg-white rounded-2xl shadow-sm border-2 border-[#E2E8F0] hover:border-[#0B529C] transition-all duration-300 hover:translate-y-[-10px] flex flex-col p-6 min-w-[260px] max-w-[340px]">
+                                <div className="text-lg font-semibold mb-2">Elite</div>
+                                <div className="flex items-end mb-2">
+                                    <span className="text-[48px] font-[800] text-[#1a1f36]">$127</span>
+                                    <span className="text-base text-gray-500 mb-3.5 font-medium">/month</span>
+                                </div>
+                                <div className="text-gray-500 text-sm mb-4">Everything in Lite & Growth as well as priority service delivery on all services</div>
+                                <div className="font-semibold text-[#0A529C] mb-3 text-sm font-medium border-b border-[#e5e7eb] pb-1.5">Instant AI Video Creator</div>
+                                <ul className="mb-4 space-y-2 text-sm">
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>25 Videos Per Month</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Realistic Actors</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Available In 29 Languages</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Export Without Watermark</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Script Generation</li>
+                                </ul>
+                                <div className="font-semibold text-[#0A529C] text-sm pb-1.5 mb-4 border-b border-[#e5e7eb] flex items-center gap-1">BandsOffAds VIP Benefits
+                                    <span className="ml-1 cursor-pointer" title="Exclusive benefits for Growth & Elite plans.">
+                                        <Tooltip delayDuration={0}>
+                                            <TooltipTrigger asChild>
+                                                <FaQuestionCircle />
+                                            </TooltipTrigger>
+                                            <TooltipContent className='w-56 border-none shadow-none rounded-2xl bg-[#1a1f36] text-white p-3 px-4'>
+                                                <p className='text-sm font-medium'>BandsOffAds VIP Benefits apply to all the done for you ad packages under the DFY tab on the left hand side as well as a few other bonuses.</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </span>
+                                </div>
+                                <ul className="mb-6 space-y-2 text-sm">
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>50% OFF DFY Videos</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>24 Hour Delivery + Revisions</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Product Research Vault</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Description Generator</li>
+                                    <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Adcopy Wizard</li>
+                                </ul>
+                                <Link href="https://clients.bandsoffads.com/order/XOY3KD/portal">
+                                    <Button className="mt-auto w-full rounded-md bg-[#0A529C] hover:bg-[#084380]">Get Started</Button>
+                                </Link>
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsPricingModalOpen(false)}
+                                className="w-[184px] border-red-600 text-red-600 font-normal hover:bg-red-600 hover:text-white rounded-[6px]"
+                            >
+                                Cancel
                             </Button>
                         </DialogFooter>
                     </div>
