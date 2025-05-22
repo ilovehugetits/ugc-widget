@@ -36,7 +36,6 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/', request.url))
     }
 
-    // Hash doğrulaması yap
     const secretKey = process.env.SECRET!
     const expectedHash = await createHash(user_id as string, secretKey)
     
@@ -44,7 +43,7 @@ export async function middleware(request: NextRequest) {
       console.log('❌ Invalid hash, redirecting to root')
       return NextResponse.redirect(new URL('/', request.url))
     }
-
+    
     // Auth parametrelerini header'lara ekle
     const requestHeaders = new Headers(request.headers)
     requestHeaders.set('x-user-external-id', user_id)

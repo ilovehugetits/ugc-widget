@@ -65,10 +65,7 @@ export default async function VideosPage(props: Props) {
   const videoCount = await db.select({ count: videos.id })
     .from(videos)
     .where(
-      and(
-        eq(videos.userId, user.id),
-        not(eq(videos.status, 'deleted'))
-      )
+      eq(videos.userId, user.id)
     )
     .execute()
 

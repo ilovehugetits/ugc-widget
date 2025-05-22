@@ -657,7 +657,6 @@ export function CreateForm({ onBackClick }: Props) {
                                             {formData.script.length}
                                         </span>/1000
                                     </div>
-
                                 </div>
                                 <div className="mt-2 flex items-center justify-end gap-4">
                                     <Button

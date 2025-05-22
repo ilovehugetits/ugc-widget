@@ -43,14 +43,24 @@ export async function deleteVideo(videoId: string) {
             throw new Error('Video not found or unauthorized')
         }
 
-        await db.update(videos)
-            .set({ status: 'deleted' })
-            .where(
-                and(
-                    eq(videos.id, videoId),
-                    eq(videos.userId, user.id)
+        if (video.status === 'failed') {
+            await db.delete(videos)
+                .where(
+                    and(
+                        eq(videos.id, videoId),
+                        eq(videos.userId, user.id)
+                    )
                 )
-            )
+        } else {
+            await db.update(videos)
+                .set({ status: 'deleted' })
+                .where(
+                    and(
+                        eq(videos.id, videoId),
+                        eq(videos.userId, user.id)
+                    )
+                )
+        }
 
         return { success: true }
     } catch (error) {
@@ -60,8 +70,6 @@ export async function deleteVideo(videoId: string) {
 }
 
 export async function getActors() {
-    'use server'
-
     try {
         const actorsList = await db.query.actors.findMany({
             orderBy: (actors, { asc }) => [asc(actors.displayOrder)],
