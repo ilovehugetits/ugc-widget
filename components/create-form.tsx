@@ -1320,7 +1320,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Export Without Watermark</li>
                                     <li className="flex items-center gap-2 font-medium"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>AI Script Generation</li>
                                 </ul>
-                                <Link href="https://clients.bandsoffads.com/order/15KPYD/portal">
+                                <Link href="https://clients.bandsoffads.com/order/15KPYD/portal?">
                                     <Button className="mt-auto w-full rounded-md bg-[#0A529C] hover:bg-[#084380]">Get Started</Button>
                                 </Link>
                             </div>
@@ -1360,7 +1360,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Description Generator</li>
                                     <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Adcopy Wizard</li>
                                 </ul>
-                                <Link href="https://clients.bandsoffads.com/order/LD1RED/portal">
+                                <Link href="https://clients.bandsoffads.com/order/LD1RED/portal?">
                                     <Button className="mt-auto w-full rounded-md bg-[#0A529C] hover:bg-[#084380]">Get Started</Button>
                                 </Link>
                             </div>
@@ -1399,7 +1399,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Description Generator</li>
                                     <li className="flex items-center gap-2"><span className="text-[#0B529C] text-xl"><MdOutlineCheck /></span>Adcopy Wizard</li>
                                 </ul>
-                                <Link href="https://clients.bandsoffads.com/order/XOY3KD/portal">
+                                <Link href="https://clients.bandsoffads.com/order/XOY3KD/portal?">
                                     <Button className="mt-auto w-full rounded-md bg-[#0A529C] hover:bg-[#084380]">Get Started</Button>
                                 </Link>
                             </div>
