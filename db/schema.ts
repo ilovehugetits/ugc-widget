@@ -45,6 +45,7 @@ export const actors = pgTable('actors', {
     status: varchar('status', { length: 20 }).notNull().default('draft'),
     displayOrder: integer('display_order').notNull().default(0),
     lipDubActorId: integer('lipdub_actor_id'), // For PRO quality videos
+    lipDubProjectId: integer('lipdub_project_id'), // For PRO quality videos
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull()
 })
@@ -60,13 +61,6 @@ export const videos = pgTable('videos', {
     script: text('script').notNull(), // Video script content
     actorId: uuid('actor_id').notNull(),
     userId: uuid('user_id').notNull().references(() => users.id),
-    processingService: varchar('processing_service', { length: 50 }), // 'synclabs' or 'lipdub'
-    processingMetadata: jsonb('processing_metadata').$type<{
-        syncId?: string;
-        lipDubGenerateId?: number;
-        audioId?: string;
-        errorMessage?: string;
-    }>(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at')
