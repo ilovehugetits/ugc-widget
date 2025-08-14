@@ -65,6 +65,7 @@ const categoryEmojis: { [key: string]: string } = {
     'Bedroom': '🛌',
     'Standing': '🧍',
     'Bathroom': '🚽',
+    'AI': '🤖',
 }
 
 type ScriptStyle = {
