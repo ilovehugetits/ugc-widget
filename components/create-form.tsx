@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, memo } from 'react'
 import { FaPlay } from 'react-icons/fa'
 
 import { BsQuestionCircleFill as FaQuestionCircle } from "react-icons/bs";
@@ -120,6 +120,8 @@ export function CreateForm({ onBackClick }: Props) {
     const [nextButtonLoading, setNextButtonLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+    const categoriesRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -127,7 +129,8 @@ export function CreateForm({ onBackClick }: Props) {
 
     const { data: actors = [] } = useQuery<ActorWithoutRelations[]>({
         queryKey: ['actors'],
-        queryFn: getActors
+        queryFn: getActors,
+        refetchOnWindowFocus: false,
     })
 
     const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
@@ -499,19 +502,31 @@ export function CreateForm({ onBackClick }: Props) {
         setPreviewAudio(null);
     }, [selectedActor])
 
-    // Update the CategoriesDropdown component
-    const CategoriesDropdown = () => {
+    const handleCategoryToggle = useCallback((category: string) => {
+        // Store current scroll position
+        const scrollTop = scrollContainerRef.current?.scrollTop || 0;
+        
+        if (selectedCategories.includes(category)) {
+            setSelectedCategories(prev => prev.filter(cat => cat !== category))
+        } else {
+            setSelectedCategories(prev => [...prev, category])
+        }
+        
+        // Restore scroll position after state update
+        requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollTop = scrollTop;
+            }
+        });
+    }, [selectedCategories]);
+
+    const CategoriesDropdown = memo(() => {
         useEffect(() => {
             const handleClickOutside = (event: MouseEvent) => {
-                const dropdown = document.getElementById('category-dropdown');
-                const filterButton = document.querySelector('[title="Filter by category"]');
                 const target = event.target as Node;
 
                 // Don't close if clicking inside the dropdown or on the filter button
-                if (dropdown && dropdown.contains(target)) {
-                    return;
-                }
-                if (filterButton && filterButton.contains(target)) {
+                if (categoriesRef.current && categoriesRef.current.contains(target)) {
                     return;
                 }
 
@@ -541,7 +556,7 @@ export function CreateForm({ onBackClick }: Props) {
 
                 {isCategoryDropdownOpen && (
                     <div
-                        id="category-dropdown"
+                        ref={categoriesRef}
                         className="absolute z-10 mt-1 w-[300px] right-0 rounded-lg bg-white shadow-lg border border-gray-200 py-2"
                     >
                         <div className="px-3 py-2 border-b border-gray-100">
@@ -552,30 +567,21 @@ export function CreateForm({ onBackClick }: Props) {
                                 </div>
                             )}
                         </div>
-                        <div className="max-h-[320px] overflow-auto px-2">
+                        <div 
+                            ref={scrollContainerRef}
+                            className="max-h-[320px] overflow-auto px-2"
+                        >
                             {actorCategories.filter(category => category != "All ").map((category) => (
                                 <div
                                     key={category}
                                     className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-md cursor-pointer"
-                                    onClick={() => {
-                                        if (selectedCategories.includes(category)) {
-                                            setSelectedCategories(prev => prev.filter(cat => cat !== category))
-                                        } else {
-                                            setSelectedCategories(prev => [...prev, category])
-                                        }
-                                    }}
+                                    onClick={() => handleCategoryToggle(category)}
                                 >
                                     <Checkbox
                                         id={`category-${category}`}
                                         checked={selectedCategories.includes(category)}
                                         onCheckedChange={(checked: boolean) => {
-                                            if (checked) {
-                                                setSelectedCategories(prev => [...prev, category])
-                                            } else {
-                                                setSelectedCategories(prev =>
-                                                    prev.filter(cat => cat !== category)
-                                                )
-                                            }
+                                            handleCategoryToggle(category);
                                         }}
                                     />
                                     <label
@@ -607,7 +613,7 @@ export function CreateForm({ onBackClick }: Props) {
                 )}
             </div>
         )
-    }
+    })
 
     return (
         <TooltipProvider>
