@@ -160,7 +160,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                         <div className="aspect-[9/16] relative">
                             {activeVideo === video.id ? (
                                 <video
-                                    className="aspect-[4/6] w-full h-full rounded-xl"
+                                    className="aspect-[9/16] w-full h-full rounded-xl"
                                     src={video.cdnUrl.includes("https://") ? video.cdnUrl : "https://" + video.cdnUrl}
                                     autoPlay
                                     controls
@@ -170,7 +170,7 @@ export function VideoGrid({ getVideos, onCreateClick }: Props) {
                                     <img
                                         src={video.thumbnailUrl || 'https://ugc-storage.sfo3.digitaloceanspaces.com/thumbnail/default-thumb.jpg'}
                                         alt="Video thumbnail"
-                                        className="aspect-[4/6] w-full h-full object-cover rounded-xl"
+                                        className="aspect-[9/16] w-full h-full object-cover rounded-xl"
                                     />
                                     <div
                                         className="absolute inset-0 bg-black rounded-xl bg-opacity-50 flex items-center justify-center cursor-pointer"

@@ -65,6 +65,7 @@ const categoryEmojis: { [key: string]: string } = {
     'Bedroom': '🛌',
     'Standing': '🧍',
     'Bathroom': '🚽',
+    'Room': '🛋️',
     'AI': '🤖',
 }
 
@@ -118,6 +119,7 @@ export function CreateForm({ onBackClick }: Props) {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [nextButtonLoading, setNextButtonLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
     const { toast } = useToast()
     const queryClient = useQueryClient()
@@ -499,37 +501,45 @@ export function CreateForm({ onBackClick }: Props) {
 
     // Update the CategoriesDropdown component
     const CategoriesDropdown = () => {
-        const [isOpen, setIsOpen] = useState(false)
-
         useEffect(() => {
             const handleClickOutside = (event: MouseEvent) => {
                 const dropdown = document.getElementById('category-dropdown');
-                if (dropdown && !dropdown.contains(event.target as Node)) {
-                    setIsOpen(false);
+                const filterButton = document.querySelector('[title="Filter by category"]');
+                const target = event.target as Node;
+
+                // Don't close if clicking inside the dropdown or on the filter button
+                if (dropdown && dropdown.contains(target)) {
+                    return;
                 }
+                if (filterButton && filterButton.contains(target)) {
+                    return;
+                }
+
+                // Close dropdown if clicking outside
+                setIsCategoryDropdownOpen(false);
             };
 
-            if (isOpen) {
+            if (isCategoryDropdownOpen) {
                 document.addEventListener('click', handleClickOutside);
             }
 
             return () => {
                 document.removeEventListener('click', handleClickOutside);
             };
-        }, [isOpen]);
+        }, [isCategoryDropdownOpen]);
 
         return (
             <div className="relative">
                 <Button
                     variant="outline"
-                    onClick={() => setIsOpen(!isOpen)}
+                    onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
                     className="h-full w-full py-4 md:py-3.5 w-11 flex items-center justify-center border-gray-200 hover:bg-gray-50"
                     title="Filter by category"
                 >
                     <Filter className="h-4 w-4 text-gray-600" />
                 </Button>
 
-                {isOpen && (
+                {isCategoryDropdownOpen && (
                     <div
                         id="category-dropdown"
                         className="absolute z-10 mt-1 w-[300px] right-0 rounded-lg bg-white shadow-lg border border-gray-200 py-2"
@@ -547,8 +557,7 @@ export function CreateForm({ onBackClick }: Props) {
                                 <div
                                     key={category}
                                     className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-md cursor-pointer"
-                                    onClick={(e) => {
-                                        e.stopPropagation(); // Prevent event bubbling
+                                    onClick={() => {
                                         if (selectedCategories.includes(category)) {
                                             setSelectedCategories(prev => prev.filter(cat => cat !== category))
                                         } else {
@@ -585,8 +594,7 @@ export function CreateForm({ onBackClick }: Props) {
                                 </span>
                                 <Button
                                     variant="ghost"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
+                                    onClick={() => {
                                         setSelectedCategories([]);
                                     }}
                                     className="text-sm h-8 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -603,9 +611,10 @@ export function CreateForm({ onBackClick }: Props) {
 
     return (
         <TooltipProvider>
-            <div className='flex flex-col items-center justify-center gap-4 w-full px-4 lg:px-0 mx-auto'>
+            <div className='flex flex-col items-center justify-center gap-4 w-full px-4 lg:px-0 mx-auto h-full flex-1'>
                 {step === 0 && (
-                    <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
+
+                    <div className='bg-white w-full flex flex-col rounded-lg p-6 border border-gray-200 overflow-y-auto flex-1 max-h-[-webkit-fill-available]'>
                         <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-1">What would you like your avatar to say?</h2>
@@ -636,8 +645,8 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                         </div>
 
-                        <div className="mb-6 relative">
-                            <div className='relative'>
+                        <div className="mb-6 relative h-full">
+                            <div className='relative h-full'>
                                 <Textarea
                                     value={formData.script}
                                     onChange={(e) => {
@@ -649,17 +658,10 @@ export function CreateForm({ onBackClick }: Props) {
                                         setErrors(prev => ({ ...prev, script: undefined })); // Clear error on change
                                     }}
                                     placeholder="Type your script here..."
-                                    className={`min-h-[320px] resize-none ${errors.script ? 'border-red-500' : ''}`}
+                                    className={`h-full flex-1 resize-none ${errors.script ? 'border-red-500' : ''}`}
                                 />
 
-                                <div className="absolute bottom-10 right-0 m-2 mx-4 flex items-center gap-4">
-                                    <div className="text-[13px] font-medium text-[#9C9C9C]">
-                                        <span className={`${formData.script.length >= 1000 ? 'text-red-500' : 'text-[#565656]'}`}>
-                                            {formData.script.length}
-                                        </span>/1000
-                                    </div>
-                                </div>
-                                <div className="mt-2 flex items-center justify-end gap-4">
+                                <div className="absolute bottom-0 right-0 m-4 flex items-center gap-4">
                                     <Button
                                         onClick={() => setIsModalOpen(true)}
                                         variant="outline"
@@ -680,6 +682,11 @@ export function CreateForm({ onBackClick }: Props) {
                                         </svg>
                                         Generate With AI
                                     </Button>
+                                    <div className="text-[13px] font-medium text-[#9C9C9C]">
+                                        <span className={`${formData.script.length >= 1000 ? 'text-red-500' : 'text-[#565656]'}`}>
+                                            {formData.script.length}
+                                        </span>/1000
+                                    </div>
                                 </div>
                             </div>
                             {errors.script && (
@@ -698,8 +705,8 @@ export function CreateForm({ onBackClick }: Props) {
                     </div>
                 )}
                 {step === 1 && (
-                    <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
-                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
+                    <div className='bg-white w-full flex flex-col rounded-lg p-5 border border-gray-200 flex-1'>
+                        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-2'>
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-1">Choose your avatar</h2>
                                 <p className="text-sm text-gray-600">Select an avatar that best represents your brand</p>
@@ -729,7 +736,7 @@ export function CreateForm({ onBackClick }: Props) {
                             </div>
                         </div>
 
-                        <div className="mb-6 space-y-4">
+                        <div className="mb-4 space-y-4">
                             <div className="flex sm:flex-row gap-4">
                                 <div className="relative flex-1 w-full">
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -744,93 +751,93 @@ export function CreateForm({ onBackClick }: Props) {
                                     <CategoriesDropdown />
                                 </div>
                             </div>
-
-                            <div className="text-sm text-gray-600">
-                                Showing {filteredActors.length} {filteredActors.length === 1 ? 'avatar' : 'avatars'}
-                            </div>
                         </div>
 
-                        <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 max-h-[45vh] lg:grid-cols-6 sm:max-h-[55vh] lg:max-h-[68vh] overflow-y-auto">
-                            {filteredActors.map(actor => (
-                                <div
-                                    key={actor.id}
-                                    className={`transition-all overflow-hidden aspect-[5/7] h-max group rounded-[8px] relative flex flex-col ${selectedActor === actor.id ? 'border-[3px] border-[#0069d9]' : ''}`}
-                                    onMouseEnter={() => handleActorHover(actor.name)}
-                                    onMouseLeave={handleActorHoverEnd}
-                                    onClick={() => setSelectedActor(actor.id)}
-                                >
-                                    {activeActor === actor.name ? (
-                                        <video
-                                            className="w-full h-full object-cover"
-                                            src={actor.url}
-                                            autoPlay
-                                            controls
-                                        />
-                                    ) : (
-                                        <>
-                                            <Image
-                                                src={actor.thumbnail}
-                                                alt={actor.name}
+                        <div className='relative flex-1 bg-red-green-500 overflow-y-auto h-full'>
+                            <div className="absolute gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 h-[-webkit-fill-available] overflow-y-auto">
+                                {filteredActors.map(actor => (
+                                    <div
+                                        key={actor.id}
+                                        className={`transition-all overflow-hidden aspect-[9/16] h-max group rounded-[8px] relative flex flex-col ${selectedActor === actor.id ? 'border-[3px] border-[#0069d9]' : ''}`}
+                                        onMouseEnter={() => handleActorHover(actor.name)}
+                                        onMouseLeave={handleActorHoverEnd}
+                                        onClick={() => setSelectedActor(actor.id)}
+                                    >
+                                        {activeActor === actor.name ? (
+                                            <video
                                                 className="w-full h-full object-cover"
-                                                width={200}
-                                                height={200}
+                                                src={actor.url}
+                                                autoPlay
+                                                controls
                                             />
-                                            <div
-                                                className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer"
-                                                onClick={(e) => {
-                                                    e.stopPropagation(); // Prevent triggering parent's onClick
-                                                    handlePlayClick(actor.name);
-                                                    setSelectedActor(actor.id);
-                                                }}
-                                            >
-                                                <FaPlay className="text-white text-2xl" />
-                                            </div>
-                                        </>
-                                    )}
+                                        ) : (
+                                            <>
+                                                <Image
+                                                    src={actor.thumbnail}
+                                                    alt={actor.name}
+                                                    className="w-full h-full object-cover"
+                                                    width={200}
+                                                    height={200}
+                                                />
+                                                <div
+                                                    className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center cursor-pointer"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation(); // Prevent triggering parent's onClick
+                                                        handlePlayClick(actor.name);
+                                                        setSelectedActor(actor.id);
+                                                    }}
+                                                >
+                                                    <FaPlay className="text-white text-2xl" />
+                                                </div>
+                                            </>
+                                        )}
 
-                                    {activeActor === actor.name ? (
-                                        <div className="absolute left-0 top-0 px-3 py-2.5 w-full flex gap-1 flex-col flex-wrap">
-                                            <div className="text-white line-clamp-2 font-medium text-[14px]">
-                                                {actor.name}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className="absolute left-0 bottom-0 p-2 px-3 w-full">
+                                        {activeActor === actor.name ? (
+                                            <div className="absolute left-0 top-0 px-3 py-2.5 w-full flex gap-1 flex-col flex-wrap">
                                                 <div className="text-white line-clamp-2 font-medium text-[14px]">
                                                     {actor.name}
                                                 </div>
                                             </div>
-                                        </>
-                                    )}
-
-                                    <div
-                                        className="absolute right-3 top-2.5 text-white cursor-pointer transition-all"
-                                        onClick={(e) => {
-                                            e.stopPropagation(); // Prevent triggering parent's onClick
-                                            setSelectedActor(actor.id);
-                                        }}
-                                    >
-                                        {selectedActor === actor.id ? (
-                                            <svg className="shadow-xl" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M10 0C4.48622 0 0 4.48622 0 10C0 15.5138 4.48622 20 10 20C15.5138 20 20 15.5138 20 10C20 4.48622 15.5138 0 10 0ZM15.589 7.36842L9.198 13.7093C8.82206 14.0852 8.22055 14.1103 7.81955 13.7343L4.43609 10.6516C4.03509 10.2757 4.01003 9.64912 4.3609 9.24812C4.73684 8.84712 5.36341 8.82206 5.76441 9.198L8.44612 11.6541L14.1604 5.93985C14.5614 5.53885 15.188 5.53885 15.589 5.93985C15.99 6.34085 15.99 6.96742 15.589 7.36842Z" fill="white" />
-                                            </svg>
                                         ) : (
-                                            <svg className="shadow-xl" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect x="0.8" y="0.8" width="18.4" height="18.4" rx="9.2" stroke="white" strokeWidth="1.6" />
-                                            </svg>
+                                            <>
+                                                <div className="absolute left-0 bottom-0 p-2 px-3 w-full">
+                                                    <div className="text-white line-clamp-2 font-medium text-[14px]">
+                                                        {actor.name}
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
+
+                                        <div
+                                            className="absolute right-3 top-2.5 text-white cursor-pointer transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent triggering parent's onClick
+                                                setSelectedActor(actor.id);
+                                            }}
+                                        >
+                                            {selectedActor === actor.id ? (
+                                                <svg className="shadow-xl" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M10 0C4.48622 0 0 4.48622 0 10C0 15.5138 4.48622 20 10 20C15.5138 20 20 15.5138 20 10C20 4.48622 15.5138 0 10 0ZM15.589 7.36842L9.198 13.7093C8.82206 14.0852 8.22055 14.1103 7.81955 13.7343L4.43609 10.6516C4.03509 10.2757 4.01003 9.64912 4.3609 9.24812C4.73684 8.84712 5.36341 8.82206 5.76441 9.198L8.44612 11.6541L14.1604 5.93985C14.5614 5.53885 15.188 5.53885 15.589 5.93985C15.99 6.34085 15.99 6.96742 15.589 7.36842Z" fill="white" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="shadow-xl" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect x="0.8" y="0.8" width="18.4" height="18.4" rx="9.2" stroke="white" strokeWidth="1.6" />
+                                                </svg>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
+
+
                         {errors.actor && (
                             <p className="text-sm text-red-500 mt-4">{errors.actor}</p>
                         )}
                     </div>
                 )}
                 {step === 2 && (
-                    <div className='bg-white w-full rounded-lg p-6 border border-gray-200'>
+                    <div className='bg-white w-full rounded-lg p-6 border border-gray-200 flex-1'>
                         <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4'>
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900 mb-1">Configure audio settings</h2>
