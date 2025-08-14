@@ -520,7 +520,7 @@ export function CreateForm({ onBackClick }: Props) {
         });
     }, [selectedCategories]);
 
-    const CategoriesDropdown = memo(() => {
+    const CategoriesDropdown = memo(function CategoriesDropdown() {
         useEffect(() => {
             const handleClickOutside = (event: MouseEvent) => {
                 const target = event.target as Node;
@@ -541,7 +541,7 @@ export function CreateForm({ onBackClick }: Props) {
             return () => {
                 document.removeEventListener('click', handleClickOutside);
             };
-        }, [isCategoryDropdownOpen]);
+        }, []);
 
         return (
             <div className="relative">
@@ -580,7 +580,7 @@ export function CreateForm({ onBackClick }: Props) {
                                     <Checkbox
                                         id={`category-${category}`}
                                         checked={selectedCategories.includes(category)}
-                                        onCheckedChange={(checked: boolean) => {
+                                        onCheckedChange={() => {
                                             handleCategoryToggle(category);
                                         }}
                                     />
