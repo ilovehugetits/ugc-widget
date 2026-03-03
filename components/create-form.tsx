@@ -760,7 +760,7 @@ export function CreateForm({ onBackClick }: Props) {
                         </div>
 
                         <div className='relative flex-1 bg-red-green-500 overflow-y-auto h-full'>
-                            <div className="absolute gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 h-[-webkit-fill-available] overflow-y-auto">
+                            <div className="absolute gap-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 h-[-webkit-fill-available] overflow-y-auto w-full">
                                 {filteredActors.map(actor => (
                                     <div
                                         key={actor.id}
