@@ -8,6 +8,7 @@ import OpenAI from "openai"
 import axios from 'axios'
 import { ElevenLabsClient } from "elevenlabs";
 import { Readable } from 'stream';
+import { generateUploadUrl } from './actions/s3-upload';
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 })
@@ -381,9 +382,22 @@ export async function generateAudioPreview(text: string, voiceId: string, settin
             properties: audioStream ? Object.keys(audioStream) : 'null'
         });
 
-        const stream = await streamToBase64(audioStream)
+        const base64 = await streamToBase64(audioStream)
 
-        return stream;
+        // Upload to S3 so we have a URL for the API
+        const buffer = Buffer.from(base64, 'base64');
+        const { uploadUrl, fileUrl } = await generateUploadUrl('audio/mpeg');
+
+        await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'audio/mpeg',
+                'x-amz-acl': 'public-read',
+            },
+            body: buffer,
+        });
+
+        return { base64, audioUrl: fileUrl };
     } catch (error) {
         console.error('Error generating audio preview:', error);
         throw error;

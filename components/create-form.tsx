@@ -163,6 +163,7 @@ export function CreateForm({ onBackClick }: Props) {
     });
 
     const [previewAudio, setPreviewAudio] = useState<string | null>(null);
+    const [scriptAudioUrl, setScriptAudioUrl] = useState<string | null>(null);
 
     const { canMakeRequest, incrementRequestCount } = useRateLimit('audio_preview', 20);
 
@@ -264,9 +265,10 @@ export function CreateForm({ onBackClick }: Props) {
 
             return audioStream;
         },
-        onSuccess: (audioStream) => {
-            const audioUrl = `data:audio/mpeg;base64,${audioStream}`;
-            setPreviewAudio(audioUrl);
+        onSuccess: (result: { base64: string; audioUrl: string }) => {
+            const previewDataUrl = `data:audio/mpeg;base64,${result.base64}`;
+            setPreviewAudio(previewDataUrl);
+            setScriptAudioUrl(result.audioUrl);
             incrementRequestCount();
             toast({ title: "Audio preview generated successfully" });
         },
@@ -365,7 +367,7 @@ export function CreateForm({ onBackClick }: Props) {
         createMutation.mutate({
             ...formData,
             actorId: selectedActor,
-            audioUrl: activeInputTab === "audio" ? audioUrl || undefined : undefined
+            audioUrl: activeInputTab === "audio" ? audioUrl || undefined : scriptAudioUrl || undefined
         })
     }
 
